@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Modifier l\'employé')">
+<x-layouts::app :title="__('garage.Modifier l\'employé')">
     <flux:heading size="xl">Modifier l'employé</flux:heading>
     <flux:text class="mt-2">Modifier les informations de {{ $employee->user->name ?? 'l\'employé' }}.</flux:text>
 

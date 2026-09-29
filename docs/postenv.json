@@ -1,0 +1,25 @@
+{
+  "id": "piiston-local-env",
+  "name": "Piiston Local",
+  "values": [
+    { "key": "base_url", "value": "http://127.0.0.1:8000", "enabled": true, "type": "default" },
+    { "key": "token", "value": "", "enabled": true, "type": "secret" },
+    { "key": "user_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "login_email", "value": "client@piiston.com", "enabled": true, "type": "default" },
+    { "key": "login_password", "value": "password", "enabled": true, "type": "secret" },
+    { "key": "vehicle_id", "value": "", "enabled": true, "type": "default" },
+    { "key": "brand_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "model_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "country_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "fuel_type_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "transmission_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "license_plate", "value": "LT-TEST-001", "enabled": true, "type": "default" },
+    { "key": "garage_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "branch_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "service_id", "value": "1", "enabled": true, "type": "default" },
+    { "key": "appointment_id", "value": "", "enabled": true, "type": "default" },
+    { "key": "emergency_id", "value": "", "enabled": true, "type": "default" },
+    { "key": "mechanic_id", "value": "", "enabled": true, "type": "default" }
+  ],
+  "_postman_variable_scope": "environment"
+}

@@ -1,11 +1,11 @@
 <div class="flex flex-col gap-2 pb-8">
     <x-admin.index-header
         title="Feature Flags"
-        subtitle="Déploiement progressif et expérimentation"
-        actionText="Nouveau Flag"
+        subtitle="Progressive deployment and experimentation"
+        actionText="New Flag"
         actionClick="openModal()"
         searchModel="search"
-        searchPlaceholder="Nom du flag..."
+        searchPlaceholder="Flag name..."
     />
 
     <div class="bg-[var(--surface)] p-2 rounded-2xl border border-zinc-100 dark:border-white/5 shadow-card-sm overflow-hidden">
@@ -13,9 +13,9 @@
             <table class="w-full text-left">
                 <thead>
                     <tr class="text-left border-b border-zinc-50 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
-                        <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Fonctionnalité</th>
-                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Déploiement</th>
-                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Statut</th>
+                        <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Feature</th>
+                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Rollout</th>
+                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Status</th>
                         <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Description</th>
                         <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Actions</th>
                     </tr>
@@ -36,9 +36,9 @@
                             </td>
                             <td class="py-3 px-3 text-center">
                                 @if($flag->enabled)
-                                    <span class="px-2 py-0.5 rounded-lg bg-green-500/10 text-green-600 text-[8px] font-black uppercase tracking-widest">Activé</span>
+                                    <span class="px-2 py-0.5 rounded-lg bg-green-500/10 text-green-600 text-[8px] font-black uppercase tracking-widest">Enabled</span>
                                 @else
-                                    <span class="px-2 py-0.5 rounded-lg bg-yellow-500/10 text-yellow-600 text-[8px] font-black uppercase tracking-widest">Désactivé</span>
+                                    <span class="px-2 py-0.5 rounded-lg bg-yellow-500/10 text-yellow-600 text-[8px] font-black uppercase tracking-widest">Disabled</span>
                                 @endif
                             </td>
                             <td class="py-3 px-3">
@@ -48,8 +48,8 @@
                                 <flux:dropdown>
                                     <flux:button size="xs" variant="ghost" icon="ellipsis-vertical" class="rounded-lg" />
                                     <flux:menu class="min-w-[180px] rounded-xl p-1 shadow-xl">
-                                        <flux:menu.item wire:click="openModal({{ $flag->id }})" icon="pencil" class="rounded-lg font-bold text-[10px] uppercase">Modifier</flux:menu.item>
-                                        <flux:menu.item wire:click="deleteFlag({{ $flag->id }})" icon="trash" variant="danger" class="rounded-lg font-bold text-[10px] uppercase">Supprimer</flux:menu.item>
+                                        <flux:menu.item wire:click="openModal({{ $flag->id }})" icon="pencil" class="rounded-lg font-bold text-[10px] uppercase">Edit</flux:menu.item>
+                                        <flux:menu.item wire:click="deleteFlag({{ $flag->id }})" icon="trash" variant="danger" class="rounded-lg font-bold text-[10px] uppercase">Delete</flux:menu.item>
                                     </flux:menu>
                                 </flux:dropdown>
                             </td>

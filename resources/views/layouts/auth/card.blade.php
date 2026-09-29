@@ -17,8 +17,8 @@
 
             <div class="auth-card">
                 <button id="theme-toggle-btn" class="theme-toggle-btn auth-card__theme-btn" aria-label="Toggle Dark/Light Mode" style="position: absolute; top: 18px; right: 18px;">
-                    <svg class="icon-svg theme-icon-sun" style="display: none;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                    <svg class="icon-svg theme-icon-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+                    <i class="hgi hgi-sun-01 theme-icon-sun" style="display: none; font-size: 1.25rem;"></i>
+                    <i class="hgi hgi-moon-01 theme-icon-moon" style="font-size: 1.25rem;"></i>
                 </button>
 
                 {{ $slot }}

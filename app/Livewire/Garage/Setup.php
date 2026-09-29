@@ -136,8 +136,8 @@ class Setup extends Component
             'name' => $this->branch_name,
             'email' => $this->branch_email,
             'phone' => $this->branch_phone,
-            'latitude' => $this->latitude,
-            'longitude' => $this->longitude,
+            'latitude' => $this->latitude ?: 4.0511,
+            'longitude' => $this->longitude ?: 9.7679,
             'status' => true,
         ]);
 

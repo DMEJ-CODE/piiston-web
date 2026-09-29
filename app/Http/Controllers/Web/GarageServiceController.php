@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
+use App\Models\Garages\GarageService;
 use Illuminate\Http\Request;
 
 class GarageServiceController extends Controller
@@ -40,5 +41,33 @@ class GarageServiceController extends Controller
         $branch->services()->create($request->all());
 
         return back()->with('success', 'Service ajouté au catalogue.');
+    }
+
+    public function update(Request $request, GarageService $service)
+    {
+        $branch = $request->attributes->get('garageBranch');
+        $this->authorize('manageBranch', $branch);
+        abort_unless($service->branch_id === $branch->id, 404);
+
+        $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'price' => ['required', 'numeric', 'min:0'],
+            'duration_minutes' => ['required', 'integer', 'min:1'],
+        ]);
+
+        $service->update($request->all());
+
+        return back()->with('success', 'Service mis à jour.');
+    }
+
+    public function destroy(Request $request, GarageService $service)
+    {
+        $branch = $request->attributes->get('garageBranch');
+        $this->authorize('manageBranch', $branch);
+        abort_unless($service->branch_id === $branch->id, 404);
+
+        $service->delete();
+
+        return back()->with('success', 'Service retiré du catalogue.');
     }
 }

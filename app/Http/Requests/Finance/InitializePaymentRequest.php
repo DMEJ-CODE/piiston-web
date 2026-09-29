@@ -18,6 +18,8 @@ class InitializePaymentRequest extends FormRequest
             'currency_id' => 'required|exists:currencies,id',
             'payment_method_id' => 'required|exists:payment_methods,id',
             'transaction_type' => 'required|string|in:REPAIR,MARKETPLACE,SUBSCRIPTION,WALLET_FUNDING',
+            'phone' => 'nullable|string',
+            'channel' => 'nullable|string',
         ];
     }
 }

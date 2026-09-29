@@ -3,7 +3,7 @@
     <div class="w-full lg:w-72 shrink-0">
         <div class="space-y-6">
             <div>
-                <h3 class="px-4 text-[10px] font-black uppercase tracking-[2px] text-[var(--active-2)] mb-4">{{ __('Mon Compte') }}</h3>
+                <h3 class="px-4 text-[10px] font-black uppercase tracking-[2px] text-[var(--active-2)] mb-4">{{ __('settings.My account') }}</h3>
                 <div class="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-white/5 shadow-premium overflow-hidden">
                     <nav class="flex flex-col divide-y divide-slate-50 dark:divide-white/[0.02]">
                         <a href="{{ route('profile.edit') }}"
@@ -19,8 +19,8 @@
                                 <i class="hgi-stroke hgi-user-circle text-lg"></i>
                             </div>
                             <div class="flex flex-col min-w-0">
-                                <span @class(['text-[13px] uppercase tracking-tight', 'font-black text-slate-900 dark:text-white' => request()->routeIs('profile.edit'), 'font-bold text-slate-500' => !request()->routeIs('profile.edit')])>{{ __('Profil') }}</span>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter truncate">{{ __('Nom, Email & Avatar') }}</span>
+                                <span @class(['text-[13px] uppercase tracking-tight', 'font-black text-slate-900 dark:text-white' => request()->routeIs('profile.edit'), 'font-bold text-slate-500' => !request()->routeIs('profile.edit')])>{{ __('settings.Profile') }}</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter truncate">{{ __('settings.Name, Email & Avatar') }}</span>
                             </div>
                             <i class="hgi-stroke hgi-arrow-right-01 ml-auto text-slate-300 text-sm"></i>
                         </a>
@@ -38,8 +38,8 @@
                                 <i class="hgi-stroke hgi-shield-01 text-lg"></i>
                             </div>
                             <div class="flex flex-col min-w-0">
-                                <span @class(['text-[13px] uppercase tracking-tight', 'font-black text-slate-900 dark:text-white' => request()->routeIs('security.edit'), 'font-bold text-slate-500' => !request()->routeIs('security.edit')])>{{ __('Sécurité') }}</span>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter truncate">{{ __('Mot de passe & 2FA') }}</span>
+                                <span @class(['text-[13px] uppercase tracking-tight', 'font-black text-slate-900 dark:text-white' => request()->routeIs('security.edit'), 'font-bold text-slate-500' => !request()->routeIs('security.edit')])>{{ __('settings.Security') }}</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter truncate">{{ __('settings.Password & 2FA') }}</span>
                             </div>
                             <i class="hgi-stroke hgi-arrow-right-01 ml-auto text-slate-300 text-sm"></i>
                         </a>
@@ -57,8 +57,8 @@
                                 <i class="hgi-stroke hgi-paint-brush-01 text-lg"></i>
                             </div>
                             <div class="flex flex-col min-w-0">
-                                <span @class(['text-[13px] uppercase tracking-tight', 'font-black text-slate-900 dark:text-white' => request()->routeIs('appearance.edit'), 'font-bold text-slate-500' => !request()->routeIs('appearance.edit')])>{{ __('Apparence') }}</span>
-                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter truncate">{{ __('Thème & Couleurs') }}</span>
+                                <span @class(['text-[13px] uppercase tracking-tight', 'font-black text-slate-900 dark:text-white' => request()->routeIs('appearance.edit'), 'font-bold text-slate-500' => !request()->routeIs('appearance.edit')])>{{ __('settings.Appearance') }}</span>
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-tighter truncate">{{ __('settings.Theme & Colors') }}</span>
                             </div>
                             <i class="hgi-stroke hgi-arrow-right-01 ml-auto text-slate-300 text-sm"></i>
                         </a>
@@ -69,9 +69,9 @@
             <!-- Promotion / Help Card -->
             <div class="p-6 rounded-[28px] bg-slate-900 text-white relative overflow-hidden shadow-xl">
                 <i class="hgi-stroke hgi-help-circle text-6xl absolute -right-4 -bottom-4 text-white/5 rotate-12"></i>
-                <h4 class="text-xs font-black uppercase tracking-widest mb-2">{{ __('Centre d\'aide') }}</h4>
+                <h4 class="text-xs font-black uppercase tracking-widest mb-2">{{ __('settings.Help center') }}</h4>
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-tight leading-relaxed mb-4">Besoin d'assistance pour configurer votre compte ?</p>
-                <flux:button variant="ghost" class="!rounded-xl !bg-white/10 !text-white !border-none !text-[9px] !font-black !uppercase w-full">{{ __('Consulter la FAQ') }}</flux:button>
+                <flux:button variant="ghost" class="!rounded-xl !bg-white/10 !text-white !border-none !text-[9px] !font-black !uppercase w-full">{{ __('settings.View the FAQ') }}</flux:button>
             </div>
         </div>
     </div>

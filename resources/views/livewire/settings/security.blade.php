@@ -1,16 +1,16 @@
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Paramètres de sécurité') }}</flux:heading>
+    <flux:heading class="sr-only">{{ __('settings.Security settings') }}</flux:heading>
 
-    <x-settings.layout :heading="__('Sécurité & Mot de passe')" :subheading="__('Gérez vos accès et l\'authentification forte')">
+    <x-settings.layout :heading="__('settings.Security & Password')" :subheading="__('settings.Manage your access and strong authentication')">
 
         <!-- Password Section -->
         <div class="mb-16">
-            <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('Modifier le mot de passe') }}</h4>
+            <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('settings.Update password') }}</h4>
             <form method="POST" wire:submit="updatePassword" class="space-y-10">
                 <flux:field>
-                    <flux:label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{{ __('Mot de passe actuel') }}</flux:label>
+                    <flux:label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{{ __('settings.Current password') }}</flux:label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i class="hgi-stroke hgi-key-01 text-sm text-slate-400 group-focus-within:text-orange-500 transition-colors"></i>
@@ -23,7 +23,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <flux:field>
-                        <flux:label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{{ __('Nouveau mot de passe') }}</flux:label>
+                        <flux:label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{{ __('settings.New password') }}</flux:label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="hgi-stroke hgi-shield-01 text-sm text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
@@ -35,7 +35,7 @@
                     </flux:field>
 
                     <flux:field>
-                        <flux:label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{{ __('Confirmer le mot de passe') }}</flux:label>
+                        <flux:label class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-2 ml-1">{{ __('settings.Confirm password') }}</flux:label>
                         <div class="relative group">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                                 <i class="hgi-stroke hgi-tick-02 text-sm text-slate-400 group-focus-within:text-emerald-500 transition-colors"></i>
@@ -49,7 +49,7 @@
 
                 <div class="flex justify-end">
                     <flux:button variant="primary" type="submit" class="rounded-2xl font-black uppercase text-[10px] bg-gradient-to-br from-orange-600 to-orange-400 border-none shadow-lg px-10 py-3.5 hover:scale-[1.02] active:scale-95 transition-all">
-                        {{ __('Mettre à jour le mot de passe') }}
+                        {{ __('settings.Update password') }}
                     </flux:button>
                 </div>
             </form>
@@ -57,7 +57,7 @@
 
         @if ($canManageTwoFactor)
             <div class="mt-16 pt-10 border-t border-slate-50 dark:border-white/5">
-                <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('Authentification à deux facteurs') }}</h4>
+                <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('settings.Two-factor authentication') }}</h4>
 
                 <div @class([
                     'p-8 rounded-[32px] border transition-all',
@@ -75,20 +75,20 @@
 
                         <div class="flex-1 text-center md:text-left">
                             <h5 class="text-sm font-black text-slate-900 dark:text-white uppercase tracking-tight mb-2">
-                                {{ $twoFactorEnabled ? __('2FA Activée') : __('2FA Désactivée') }}
+                                {{ $twoFactorEnabled ? __('settings.2FA Enabled') : __('settings.2FA Disabled') }}
                             </h5>
                             <p class="text-xs text-slate-500 font-medium leading-relaxed max-w-lg">
-                                {{ __('L\'authentification forte ajoute une étape de vérification supplémentaire lors de la connexion pour garantir que vous seul puissiez accéder à votre compte.') }}
+                                {{ __('settings.Strong authentication adds an extra verification step at login to guarantee that only you can access your account.') }}
                             </p>
                         </div>
 
                         @if ($twoFactorEnabled)
                             <flux:button variant="danger" wire:click="disable" class="rounded-2xl font-black uppercase text-[10px] px-8 py-3 shadow-md">
-                                {{ __('Désactiver') }}
+                                {{ __('settings.Disable 2FA') }}
                             </flux:button>
                         @else
                             <flux:button variant="primary" wire:click="enable" class="rounded-2xl font-black uppercase text-[10px] bg-slate-900 dark:bg-white dark:text-slate-900 border-none px-10 py-3.5 shadow-xl hover:scale-105 transition-all">
-                                {{ __('Activer maintenant') }}
+                                {{ __('settings.Enable 2FA') }}
                             </flux:button>
                         @endif
                     </div>
@@ -104,7 +104,7 @@
 
         @if ($canManagePasskeys)
             <div class="mt-16 pt-10 border-t border-slate-50 dark:border-white/5">
-                <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('Passkeys (Biométrie)') }}</h4>
+                <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('settings.Passkeys') }}</h4>
 
                 <div class="space-y-4">
                     @forelse ($passkeys as $passkey)
@@ -116,7 +116,7 @@
                                 <div class="flex flex-col">
                                     <span class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{{ $passkey['name'] }}</span>
                                     <div class="flex items-center gap-2 mt-1">
-                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ __('Ajouté') }} {{ $passkey['created_at_diff'] }}</span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{{ __('settings.Added :time', ['time' => $passkey['created_at_diff']]) }}</span>
                                         @if ($passkey['authenticator'])
                                             <span class="size-1 rounded-full bg-slate-200"></span>
                                             <span class="text-[9px] font-black text-blue-500 uppercase">{{ $passkey['authenticator'] }}</span>
@@ -133,8 +133,8 @@
                                 <i class="hgi-stroke hgi-face-id text-3xl text-slate-300"></i>
                             </div>
                             <div class="flex flex-col gap-1">
-                                <p class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">{{ __('Aucune Passkey') }}</p>
-                                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ __('Connectez-vous avec votre empreinte ou FaceID') }}</p>
+                                <p class="text-xs font-black text-slate-700 dark:text-slate-300 uppercase tracking-widest">{{ __('settings.No passkeys yet') }}</p>
+                                <p class="text-[10px] text-slate-400 font-bold uppercase">{{ __('settings.Sign in with your fingerprint or Face ID') }}</p>
                             </div>
                         </div>
                     @endforelse
@@ -166,8 +166,8 @@
                         </div>
 
                         <div class="flex gap-4">
-                            <flux:button variant="ghost" class="flex-1 !rounded-2xl !py-4 font-black uppercase text-[11px] border border-slate-200" wire:click="resetVerification">{{ __('Retour') }}</flux:button>
-                            <flux:button variant="primary" class="flex-1 !rounded-2xl !py-4 font-black uppercase text-[11px] bg-slate-900 text-white border-none shadow-lg" wire:click="confirmTwoFactor" x-bind:disabled="$wire.code.length < 6">{{ __('Valider') }}</flux:button>
+                            <flux:button variant="ghost" class="flex-1 !rounded-2xl !py-4 font-black uppercase text-[11px] border border-slate-200" wire:click="resetVerification">{{ __('settings.Back') }}</flux:button>
+                            <flux:button variant="primary" class="flex-1 !rounded-2xl !py-4 font-black uppercase text-[11px] bg-slate-900 text-white border-none shadow-lg" wire:click="confirmTwoFactor" x-bind:disabled="$wire.code.length < 6">{{ __('settings.Confirm') }}</flux:button>
                         </div>
                     </div>
                 @else
@@ -189,7 +189,7 @@
                         </flux:button>
 
                         <div class="flex flex-col gap-3">
-                            <span class="text-[9px] font-black text-slate-400 uppercase text-center tracking-[2px]">{{ __('Ou code manuel') }}</span>
+                            <span class="text-[9px] font-black text-slate-400 uppercase text-center tracking-[2px]">{{ __('settings.Or use a manual code') }}</span>
                             <div class="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5" x-data="{ copied: false, async copy() { await navigator.clipboard.writeText('{{ $manualSetupKey }}'); this.copied = true; setTimeout(() => this.copied = false, 2000); } }">
                                 <code class="flex-1 text-xs font-mono font-black text-slate-600 dark:text-slate-400 tracking-wider">{{ $manualSetupKey }}</code>
                                 <button @click="copy()" class="p-2 rounded-xl hover:bg-white dark:hover:bg-slate-800 shadow-sm transition-all">

@@ -2,6 +2,7 @@
 
 namespace App\Models\Garages;
 
+use App\Concerns\NormalizesBooleanStatus;
 use App\Models\Documents\Document;
 use App\Models\Globalization\Country;
 use App\Models\Promotions\Campaign;
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class GarageCompany extends Model
 {
+    use NormalizesBooleanStatus;
+
     protected $fillable = [
         'owner_id', 'has_annexes', 'country_id', 'name', 'legal_name', 'registration_number',
         'tax_number', 'email', 'phone', 'website', 'logo',
@@ -22,6 +25,7 @@ class GarageCompany extends Model
 
     protected $casts = [
         'has_annexes' => 'boolean',
+        'status' => 'boolean',
     ];
 
     public function owner(): BelongsTo

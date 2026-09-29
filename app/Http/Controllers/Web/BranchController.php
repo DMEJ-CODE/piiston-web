@@ -54,7 +54,12 @@ class BranchController extends Controller
             'longitude' => 'nullable|numeric',
         ]);
 
-        $branch->company->branches()->create($request->all() + ['status' => true]);
+        $data = $request->all();
+        $data['latitude'] = $data['latitude'] ?: 4.0511;
+        $data['longitude'] = $data['longitude'] ?: 9.7679;
+        $data['status'] = true;
+
+        $branch->company->branches()->create($data);
 
         return redirect()->route('garage.branches.index')->with('success', 'Nouvelle branche créée avec succès.');
     }

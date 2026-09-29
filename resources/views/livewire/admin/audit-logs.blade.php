@@ -1,9 +1,9 @@
 <div class="flex flex-col gap-2 pb-8">
     <x-admin.index-header
         title="Audit Logs"
-        subtitle="Historique complet des actions administratives"
+        subtitle="Complete history of administrative actions"
         searchModel="search"
-        searchPlaceholder="Action ou Entité..."
+        searchPlaceholder="Action or Entity..."
     />
 
     <div class="bg-[var(--surface)] p-2 rounded-2xl border border-zinc-100 dark:border-white/5 shadow-card-sm overflow-hidden">
@@ -11,11 +11,11 @@
             <table class="w-full text-left">
                 <thead>
                     <tr class="text-left border-b border-zinc-50 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
-                        <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Date & Heure</th>
+                        <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Date & Time</th>
                         <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Action</th>
-                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Entité</th>
-                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Administrateur</th>
-                        <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Détails</th>
+                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Entity</th>
+                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Administrator</th>
+                        <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Details</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-zinc-50 dark:divide-white/[0.02]">
@@ -40,7 +40,7 @@
                                         <span class="text-[10px] font-black text-zinc-600 dark:text-zinc-400 uppercase">{{ $log->administrator->user->name }}</span>
                                     </div>
                                 @else
-                                    <span class="text-[9px] font-black text-zinc-400 uppercase">Système</span>
+                                    <span class="text-[9px] font-black text-zinc-400 uppercase">System</span>
                                 @endif
                             </td>
                             <td class="py-2.5 px-4 text-right">
@@ -56,7 +56,7 @@
                             <td colspan="5" class="py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <i class="hgi-stroke hgi-file-script text-3xl text-zinc-200 dark:text-zinc-700 mb-2"></i>
-                                    <p class="text-[10px] font-black text-zinc-400 uppercase">Aucun log d'audit trouvé</p>
+                                    <p class="text-[10px] font-black text-zinc-400 uppercase">No audit log found</p>
                                 </div>
                             </td>
                         </tr>
@@ -75,14 +75,14 @@
     @if($showDetailsModal)
         <flux:modal wire:model="showDetailsModal" class="rounded-3xl" variant="large">
             <div class="mb-6">
-                <h3 class="text-base font-black uppercase text-zinc-900 dark:text-white tracking-tight">Détails du Log</h3>
-                <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">Inspection des modifications système</p>
+                <h3 class="text-base font-black uppercase text-zinc-900 dark:text-white tracking-tight">Log Details</h3>
+                <p class="text-[9px] text-zinc-500 font-bold uppercase tracking-widest mt-0.5">System modifications inspection</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="space-y-4">
                     <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-100 dark:border-white/5">
-                        <span class="text-[9px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Action Effectuée</span>
+                        <span class="text-[9px] font-black text-zinc-400 uppercase tracking-widest block mb-1">Action Performed</span>
                         <p class="text-xs font-black text-[var(--active-2)] uppercase">{{ $selectedLog->action }}</p>
                     </div>
                     <div class="p-4 rounded-2xl bg-zinc-50 dark:bg-white/[0.02] border border-zinc-100 dark:border-white/5">
@@ -104,11 +104,11 @@
 
                         <div class="grid grid-cols-1 gap-4 overflow-y-auto max-h-[300px] pr-2 custom-scrollbar">
                             <div>
-                                <span class="text-[8px] font-black text-red-400 uppercase tracking-[2px] mb-2 block">Anciennes Valeurs</span>
+                                <span class="text-[8px] font-black text-red-400 uppercase tracking-[2px] mb-2 block">Old Values</span>
                                 <pre class="text-[9px] font-mono text-white/70 bg-white/5 p-3 rounded-xl border border-white/5 overflow-x-auto">{{ json_encode($oldValues, JSON_PRETTY_PRINT) }}</pre>
                             </div>
                             <div>
-                                <span class="text-[8px] font-black text-green-400 uppercase tracking-[2px] mb-2 block">Nouvelles Valeurs</span>
+                                <span class="text-[8px] font-black text-green-400 uppercase tracking-[2px] mb-2 block">New Values</span>
                                 <pre class="text-[9px] font-mono text-white/70 bg-white/5 p-3 rounded-xl border border-white/5 overflow-x-auto">{{ json_encode($newValues, JSON_PRETTY_PRINT) }}</pre>
                             </div>
                         </div>
@@ -117,7 +117,7 @@
             </div>
 
             <div class="flex justify-end mt-8">
-                <flux:button wire:click="closeDetailsModal" variant="ghost" class="rounded-xl font-bold uppercase text-[10px]">Fermer</flux:button>
+                <flux:button wire:click="closeDetailsModal" variant="ghost" class="rounded-xl font-bold uppercase text-[10px]">Close</flux:button>
             </div>
         </flux:modal>
     @endif

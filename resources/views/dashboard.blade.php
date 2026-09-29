@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Dashboard')">
+<x-layouts::app :title="__('dashboard.Dashboard')">
     <div class="flex flex-col gap-3 pb-0">
         <!-- Top Stats Row -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
@@ -48,29 +48,29 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <!-- Customer Metrics -->
-                    <div class="bg-[var(--surface)] p-3 rounded-2xl border border-zinc-100 dark:border-white/5 shadow-card-sm">
-                        <h5 class="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-wider mb-6">Customers</h3>
+                    <div class="card-premium !p-5">
+                        <h5 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest mb-6">Customers</h5>
                         <div class="flex flex-col gap-6">
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="size-2 rounded-full bg-blue-500"></div>
-                                    <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400">Regular</span>
+                                    <div class="size-2 rounded-full bg-[var(--active-2)]"></div>
+                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Regular</span>
                                 </div>
-                                <span class="text-sm font-black">2,884</span>
+                                <span class="text-xs font-black text-slate-900 dark:text-white">2,884</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="size-2 rounded-full bg-teal-400"></div>
-                                    <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400">Occasional</span>
+                                    <div class="size-2 rounded-full bg-[var(--active)]"></div>
+                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-400">Occasional</span>
                                 </div>
-                                <span class="text-sm font-black">1,432</span>
+                                <span class="text-xs font-black text-slate-900 dark:text-white">1,432</span>
                             </div>
                             <div class="flex items-center justify-between">
                                 <div class="flex items-center gap-3">
-                                    <div class="size-2 rounded-full bg-orange-400"></div>
-                                    <span class="text-sm font-bold text-zinc-600 dark:text-zinc-400">New Users</span>
+                                    <div class="size-2 rounded-full bg-emerald-500"></div>
+                                    <span class="text-xs font-bold text-slate-600 dark:text-slate-400">New Users</span>
                                 </div>
-                                <span class="text-sm font-black">562</span>
+                                <span class="text-xs font-black text-slate-900 dark:text-white">562</span>
                             </div>
                         </div>
                     </div>
@@ -96,21 +96,21 @@
                 <x-dashboard.ai-assistant-card />
 
                 <!-- Quick Stats List -->
-                <div class="bg-zinc-900 dark:bg-gray-400 p-3 rounded-[15px] text-white flex flex-col gap-4 shadow-xl">
-                    <h5 class="text-xs font-black uppercase tracking-[3px] text-white/40 text-center">Top Performing Region</h5>
+                <div class="card-premium !p-5 !bg-gradient-to-br from-[var(--active-2)] to-[var(--primary-dark)] text-white flex flex-col gap-4 shadow-xl border border-white/10">
+                    <h5 class="text-[10px] font-black uppercase tracking-[3px] text-white/60 text-center">Top Performing Region</h5>
                     <div class="flex flex-col items-center gap-2">
                         <div class="text-3xl font-black tracking-tighter">98.2%</div>
-                        <span class="text-sm font-bold text-green-400">Douala Hub</span>
+                        <span class="text-xs font-bold text-emerald-300 uppercase tracking-wider">Douala Hub</span>
                     </div>
-                    <div class="h-px bg-white/10"></div>
+                    <div class="h-px bg-white/15"></div>
                     <div class="grid grid-cols-2 gap-4">
                         <div class="flex flex-col">
-                            <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Growth</span>
-                            <span class="text-base font-bold">+12.4%</span>
+                            <span class="text-[9px] font-black text-white/50 uppercase tracking-widest">Growth</span>
+                            <span class="text-sm font-bold">+12.4%</span>
                         </div>
                         <div class="flex flex-col text-right">
-                            <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Efficiency</span>
-                            <span class="text-base font-bold">94.8%</span>
+                            <span class="text-[9px] font-black text-white/50 uppercase tracking-widest">Efficiency</span>
+                            <span class="text-sm font-bold">94.8%</span>
                         </div>
                     </div>
                 </div>

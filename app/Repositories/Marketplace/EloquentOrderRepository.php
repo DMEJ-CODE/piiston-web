@@ -15,8 +15,8 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function getBuyerOrders(int $userId): LengthAwarePaginator
     {
         return Order::where('buyer_id', $userId)
-            ->with(['seller'])
-            ->orderBy('created_at', 'desc')
+            ->with(['currency', 'items.listing.part', 'seller'])
+            ->latest()
             ->paginate(15);
     }
 

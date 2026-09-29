@@ -1,0 +1,370 @@
+@startuml
+' ============================================================================
+' Piiston - Component Diagram
+' Shows interfaces (SABI), components, and the data/infra they sit on.
+' ============================================================================
+
+title Piiston — Component Diagram
+
+' ============================== ACTORS =====================================
+
+actor "Vehicle Owner" as AOwner
+actor "Mechanic /\nGarage Staff" as AMech
+actor "Spare-Part\nSeller" as ASeller
+actor "Fleet Manager" as AFleet
+actor "Platform\nAdministrator" as AAdmin
+actor "Anonymous\nVisitor" as AAnon
+
+' ============================ MOBILE CLIENT ================================
+
+package "<<component>>\nMOBILE CLIENT — Flutter (Android / iOS)" as Mob {
+
+  component "<<UI>>\nApp Shell & Routing\nmain.dart · app_routes.dart\nroutes.dart (84 named routes)\nhome.dart · loading.dart" as CShell
+
+  component "<<UI>>\nAuth Screens\nlogin · register · phone_verification\nrole_selection · forget_password" as CAuth
+
+  component "<<UI>>\nDashboards\ndashboard.dart + owner /\nmechanic / seller" as CDash
+
+  component "<<UI>>\nWorkflow Screens (14)\nservice_request_wizard · booking_flow\nrepair_tracking · quote_comparison\nsos_live · sos_intervention_form\nmechanic_emergency_hub · vin_scan\npart_request_creation · garage_explore…" as CWf
+
+  component "<<UI>>\nSeller Console (18)\nproducts · b2b quotes · analytics\ncustomers · deliveries · promotions\nreturns · reviews · ai-tools · onboarding" as CSeller
+
+  component "<<UI>>\nMarketplace & Cart\nmarketplace · product_detail\ncart · checkout · payment_gateway" as CMkt
+
+  component "<<UI>>\nMessaging & Calls\nmessage · chat_detail\ncall_page · incoming_call_page" as CChat
+
+  component "<<UI>>\nProfile & Vehicle (18)\nvehicles · vehicle_passport\nmaintenance_log · warranties\nwallet · subscription · security" as CProf
+
+  component "<<UI>>\nDesign System (perso_widget + theme)\nPageTemplate · NavBar · GlassCard\nPiistonTextField · AppColors" as CWidget
+
+  ' ---- SERVICE LAYER (as components) ----
+  component "<<service>>\nApiService\n(baseUrl · getToken · verb methods\nisOffline ValueNotifier)" as CApi
+  component "<<service>>\nAuthService\n(login · register · sendOtp\nverifyOtp · logout · 2FA)" as CAuthSvc
+  component "<<service>>\nWorkflowService\n(createRequest · submitDiagnosis\nsubmitEstimate · approveEstimate\ncompleteRepair)" as CWfSvc
+  component "<<service>>\nEmergencyService\n(requestHelp · acceptRequest\nmarkAsArrived · completeRequest\nupdateLiveLocation · cancelRequest)" as CSosSvc
+  component "<<service>>\nAppointmentService\n(book · confirm · cancel\nrepropose)" as CApptSvc
+  component "<<service>>\nMechanicService\n(profile · assignments\ninvitations · accept)" as CMecSvc
+  component "<<service>>\nGarageService + MapService\n(search · nearby · routing)" as CGarSvc
+  component "<<service>>\nMarketplaceService\n(listings · cart · orders\nsocial like/comment)" as CMktSvc
+  component "<<service>>\nSellerService\n(30 methods: products · orders\nsuppliers · B2B · analytics\nfinance · AI helpers)" as CSellerSvc
+  component "<<service>>\nPaymentService\n+ FinanceService\n(payments/pay · verify\nwallet · payment-methods)" as CPaySvc
+  component "<<service>>\nMessagingService [SINGLETON]\n(Pusher + REST + de-dup stream)" as CMsgSvc
+  component "<<service>>\nCallService [SINGLETON]\n(currentSession · incomingCall\ndurationSeconds)" as CCallSvc
+  component "<<service>>\nNotificationService [SINGLETON]\nPushNotificationService [SINGLETON]\nNotificationHandler" as CNotifSvc
+  component "<<service>>\nAiService\n+ AISuggestionService\n(assistants · chat · diagnoses)" as CAiSvc
+  component "<<service>>\nVehicleService · VehicleCatalogService\nMaintenanceService · ReminderService\nWarrantyService · ReviewService\nActivityService · AddressService" as CVehSvc
+  component "<<service>>\nPlatform extras\nBiService · DocumentService\nFleetService · AdminService\nIntegrationService · SearchService\nExpenseService · GlobalizationService\nSubscriptionService · PromotionService" as CExtraSvc
+  component "<<service>>\nLocal platform services\nOfflineCacheService · BiometricService\nThemeService · LocalizationService\nMediaService · VoiceService\nlanguage_sync · NavigationService" as CLocalSvc
+
+  ' ---- STORES ----
+  database "FlutterSecureStorage\nkey: auth_token" as DToken
+  database "SharedPreferences\nlast_home_index · last_route\ntheme_mode · language_code\nbiometrics_enabled\npiiston_cache_*" as DPrefs
+
+  ' ---- PLATFORM ADAPTERS ----
+  component "http package" as CHttp
+  component "pusher_channels_flutter\napiKey HARDCODED\nuseTLS: false" as CPusher
+  component "firebase_core + firebase_messaging" as CFcm
+  component "flutter_local_notifications" as CLocalNotif
+  component "flutter_map + geolocator + latlong2" as CGeo
+  component "local_auth" as CLocalAuth
+  component "speech_to_text" as CStt
+  component "image_picker + file_picker\n+ cached_network_image" as CPick
+  component "hugeicons + lottie\n+ google_nav_bar\n+ persistent_bottom_nav_bar" as CUiLib
+}
+
+' ============================== WEB CLIENT =================================
+
+package "<<component>>\nWEB CLIENT — Blade + Livewire 4 + Flux UI" as Web {
+  component "<<UI>>\nlayouts/app · layouts/auth\ncomponents/layouts/*" as WLayout
+  component "<<UI>>\nLanding / pricing / legal\nPublicEstimateController\nestimate/{token} (guest approve)" as WPublic
+  component "<<UI>>\nLivewire::Auth\nRegisterFlow · Onboarding" as WReg
+  component "<<UI>>\nLivewire::Settings\nProfile · Appearance · Security\nDeleteUserForm · RecoveryCodes\nLanguageSwitcher" as WSet
+  component "<<UI>>\nGARAGE BACK-OFFICE\n~100 routes, 30 view dirs\nRepairs · Diagnoses · Estimates\nCheck-ins · Deliveries · Inventory\nBays · Employees · Customers\nAppointments · PurchaseOrders\nWarrantyClaims · Invoices · Payments\nMarketplace · Reports · Settings" as WGarage
+  component "<<UI>>\nLivewire::Admin (16 screens)\nDashboard · UserManagement\nAdministrators · Roles · Permissions\nSystemSettings · AuditLogs\nApplicationErrors · CMSPages\nPlatformReports · Moderation · Fraud\nFeatureFlags · GarageSubscriptions\nChatCenter" as WAdmin
+  component "<<UI>>\nLivewire::Messaging\nChatCenter · RepairChat\nRemindersPanel" as WChat
+  component "<<UI>>\nFortify auth views\nlogin · register · 2FA\npasskeys · reset password" as WFortify
+  component "Flux UI overrides\nviews/flux/icon · navlist" as WFlux
+  component "Vite + Tailwind 4 build\nresources/css · resources/js\nEcho + Reverb bootstrap" as WVite
+}
+
+' ============================== BACKEND ====================================
+
+package "<<component>>\nAPPLICATION TIER — Laravel 13" as App {
+
+  component "<<component>>\nRoute Layer\napi.php (328) · web.php\nadmin.php · settings.php\nchannels.php · console.php" as CRoutes
+
+  component "<<component>>\nHTTP Kernel / Middleware\nSubstituteBindings (api only)\nweb group + LocaleMiddleware\nALIASES: role · permission · admin\nonboarding · subscription.feature" as CMw
+
+  component "<<component>>\nController Layer\n~130 controllers\nApi/v1/* (mobile)\nApi/v1/{Marketplace,Garage,Finance,\nFleet,Admin,Seller}/*\nApi/* legacy (duplicate)\nWeb/* (garage back-office)" as CCtrl
+
+  component "<<component>>\nResource Layer\nEloquent API Resources (≈30)\nFormRequest validators (≈25)" as CRes
+
+  component "<<component>>\nPolicy Layer (7)\nGaragePolicy · MarketplacePolicy\nRepairOrderPolicy · VehiclePolicy\nMechanicPolicy · FleetPolicy\nNotificationPolicy\n+ Gate::before(ADMIN => all)" as CPol
+
+  package "<<component>>\nDOMAIN SERVICES" as DSvc {
+    component "RepairService\n** REPAIR MACHINE WRITER **\ncreateRepairOrder · submitDiagnosis\nsubmitEstimate · approveEstimate\nupdateStatus · completeRepair\nperformQualityCheck · generateInvoice" as DRepair
+    component "ReceptionService\ncompleteReception (creates\nVehicleCheckIn + RepairOrder)" as DRecep
+    component "WarrantyService\ncheckWarrantyCoverage (anchors on\nDELIVERED + closed_at > now-6mo)\nresolveClaim (ORPHAN)" as DWarr
+    component "AppointmentService\ncreate · confirm · cancel\ngetAvailableSlots" as DAppt
+    component "OrderService\nplaceOrder (pre-flight guards\n+ lockForUpdate)" as DOrder
+    component "QuoteService\nsubmitQuote · acceptQuote\n(1 transaction: quote ACCEPTED\n+ request CLOSED + order created)" as DQuote
+    component "CartService\nMarketplaceService\nInventoryService (stock movements)" as DCart
+    component "MechanicService\ncreateProfile · updateAvailability\ngetMyAssignments (reads RepairOrder)\nacceptInvitation · declineInvitation" as DMech
+    component "PaymentService\ninitialize · handleWebhook\nnormalizeStatus" as DPay
+    component "WalletService\ngetWallet (get-or-create)\ndeposit · withdraw\n[insufficient balance guard]" as DWallet
+    component "SubscriptionService\nsubscribe · finalize" as DSub
+    component "PaymentGatewayService\nPaymentProviderInterface\nNotchPayClient" as DGateway
+    component "ChatEngine\nstartConversation · sendMessage\nmarkAsRead" as DChat
+    component "AIService\ngetAdapter() · chat()\nGemini -> OpenRouter fallback" as DAi
+    component "DiagnosisService\nPromptEngine" as DDiag
+    component "NotificationService\nTemplateService" as DNotif
+    component "AdminService\nPlatformSettingsService\nAuditService · CustomerService\nEmployeeService · GarageService\nInventoryService · ReportService\nSubscriptionService · UserService\nAuthService · ActivityService\nIndexingService · MapProviderService\nSystemAgentService\n+ BI (Analytics/KPI/Widgets/Metrics)\n+ DMS (Document/DLM/Metadata/Storage)" as DMisc
+  }
+
+  component "<<component>>\nREPOSITORY LAYER\n13 Interface + 13 Eloquent impls\nAdministration · Finance · Fleets\nGarages · Identity · Marketplace\nMechanics · Messaging · Notifications\nVehicles · Workflows" as CRepo
+
+  component "<<component>>\nEVENT LAYER (ShouldBroadcast)\nMessaging.MessageSent\nMessaging.UserTyping\nMessaging.CallStarted\nNotifications.NotificationSent" as CEvt
+
+  component "<<component>>\nASYNC LAYER\nJobs: SendPush / SendEmail / SendSms\nAggregatePlatformMetrics\nProcessReminderJob\nCommand: RunSystemAgent\nMailable: Contact, Newsletter" as CJob
+
+  component "<<component>>\nAI ADAPTERS\nAIProviderInterface\nGeminiAdapter\nOpenAIAdapter\nOpenRouterAdapter" as CAi
+
+  component "<<component>>\nSEARCH PROVIDERS\nSearchProviderInterface\nLocalSearchProvider (hardcoded)" as CSrch
+}
+
+package "<<component>>\nPERSISTENCE" as Pers {
+  component "<<component>>\n≈300 Eloquent models across\n20 domain namespaces\n+ 7 Policies" as CModels
+  database "RDBMS\nusers · vehicles · garage_companies\ngarage_branches · repair_orders\nrepair_estimates · emergency_requests\nproduct_listings · orders · part_quotes\npayment_transactions · wallets\nconversations · messages · notifications…" as CDB
+}
+
+package "<<component>>\nINFRASTRUCTURE" as Infra {
+  database "Cache\nCACHE_STORE=database (default)\nredis | memcached | file | octane" as CCache
+  database "Queue\nQUEUE_CONNECTION=database\nredis | sqs | beanstalkd | deferred" as CQueue
+  database "Object storage\nFILESYSTEM_DISK=local\ns3 | MinIO | R2 | DO Spaces" as CBlob
+  database "Redis\nREDIS_HOST:6379\ncache db1 · queue\nREQUIRED for REVERB_SCALING" as CRedis
+  database "Filesystem\nstorage/app/{private,public}\npublic/storage symlink" as CFS
+}
+
+package "<<component>>\nEXTERNAL SYSTEMS" as Ext {
+  component "Laravel Reverb\n(WEBSOCKET)\nREVERB_HOST:443\nREVERB_SERVER:8080" as CReverb
+  component "NotchPay\napi.notchpay.co\ncallback + webhook (HMAC-SHA256)" as CNotch
+  component "Firebase Cloud Messaging\nFIREBASE_PROJECT_ID" as CFcms
+  component "Google Gemini\ngenerativelanguage\n.googleapis.com" as CGemini
+  component "OpenAI\nOPENAI_API_KEY\n(NOT in config/services.php)" as COpenAi
+  component "OpenRouter\nopenrouter.ai/api/v1" as COr
+  component "Mail transport\nsmtp · ses · postmark\nresend · log" as CMail
+  component "OSM raster tiles\n(flutter_map, client-side)" as COsm
+}
+
+' ============================ INTERFACES ===================================
+
+interface "IMobileApi\nBearer auth_token\nJSON, 328 routes\nno throttling, no refresh" as IMobile
+interface "IWebApi\nsession cookie + CSRF\n~120 garage routes\n+ 16 admin Livewire" as IWeb
+interface "IRealtime\nprivate-conversation.{id}\nApp.Models.User.{id}" as IReal
+interface "IPush\nFCM data payload\nreference_type routes\nthe page to open" as IPush
+interface "IPayment\nNotchPay checkout_url\n+ verify by reference" as IPay
+interface "IAiProvider\nchat(prompt) · stream\nusage + cost logging" as IAi
+
+' ============================ RELATIONSHIPS ================================
+
+' --- actors to web ---
+AAnon ..> WPublic : "browse landing / pricing\npublic_token estimate approval"
+AOwner ..> IWeb : "session auth"
+AMech ..> IWeb : "session + ResolveGarageBranch"
+ASeller ..> IWeb
+AFleet ..> IWeb
+AAdmin ..> WAdmin : "admin middleware"
+
+WPublic ..> CCtrl
+WLayout ..> WVite
+WLayout ..> WFlux
+WReg ..> WLayout
+WSet ..> WLayout
+WGarage ..> WLayout
+WAdmin ..> WLayout
+WChat ..> WLayout
+WFortify ..> WLayout
+WGarage ..> CChat : "Livewire\Garage\RepairChat"
+
+' --- actors to mobile ---
+AOwner ..> CShell
+AMech ..> CShell
+ASeller ..> CShell
+AFleet ..> CShell
+AAdmin ..> CShell
+
+CShell ..> CAuth
+CShell ..> CDash
+CShell ..> CWf
+CShell ..> CSeller
+CShell ..> CMkt
+CShell ..> CChat
+CShell ..> CProf
+CShell ..> CWidget
+
+CAuth ..> CAuthSvc
+CDash ..> CVehSvc : "vehicles · maintenances\nreminders · activities\nexpenses"
+CDash ..> CNotifSvc
+CDash ..> CWfSvc
+CDash ..> CApptSvc
+CDash ..> CMecSvc
+CDash ..> CSellerSvc : "seller dashboard stats"
+CDash ..> CAiSvc : "smart suggestions"
+
+CWf ..> CWfSvc : "repairs/*"
+CWf ..> CSosSvc : "emergency-requests/*"
+CWf ..> CApptSvc
+CWf ..> CGarSvc
+CWf ..> CAiSvc : "VIN scan · diagnosis"
+CWf ..> CVehSvc
+
+CSeller ..> CSellerSvc
+CSeller ..> CExtraSvc : "suppliers · B2B history"
+CMkt ..> CMktSvc
+CMkt ..> CPaySvc
+CMkt ..> CLocalSvc
+CChat ..> CMsgSvc
+CChat ..> CCallSvc
+CProf ..> CVehSvc
+CProf ..> CPaySvc
+CProf ..> CExtraSvc
+
+' --- service to service ---
+CAuthSvc ..> CApi
+CWfSvc ..> CApi
+CSosSvc ..> CApi
+CApptSvc ..> CApi
+CMecSvc ..> CApi
+CGarSvc ..> CApi
+CMktSvc ..> CApi
+CSellerSvc ..> CApi
+CPaySvc ..> CApi
+CMsgSvc ..> CApi
+CAiSvc ..> CApi
+CVehSvc ..> CApi
+CExtraSvc ..> CApi
+CMsgSvc ..> CAuthSvc : "_getCurrentUserId()\n(extra GET auth/user per op)"
+
+CLocalSvc ..> DPrefs
+CLocalSvc ..> DToken
+CApi ..> DToken : "Authorization: Bearer"
+CApi ..> CLocalSvc : "OfflineCacheService\ncaches EVERY 200 GET"
+CAuthSvc ..> CLocalSvc : "getCachedData('get_auth/user')"
+CNotifSvc ..> CLocalSvc : "navigatorKey routing"
+
+' --- mobile platform adapters ---
+CApi ..> CHttp
+CMsgSvc ..> CPusher
+CNotifSvc ..> CFcm
+CNotifSvc ..> CLocalNotif
+CWf ..> CGeo
+CSosSvc ..> CGeo : "coordinates posted\nto /tracking"
+CProf ..> CLocalAuth
+CLocalSvc ..> CStt
+CSeller ..> CPick
+CShell ..> CUiLib
+CWidget ..> CUiLib
+
+' --- mobile over interfaces to server ---
+CApi ..> IMobile : "GET/POST/PUT/PATCH/DELETE\n+ multipart\n7s / 10s / 30s / 45s(ai/)"
+CMsgSvc ..> IReal
+CNotifSvc ..> IPush
+CPaySvc ..> IPay
+CAiSvc ..> IAi
+
+IMobile ..> CRoutes
+IWeb ..> CRoutes
+
+CRoutes ..> CMw
+CMw ..> CCtrl
+CCtrl ..> CRes
+CCtrl ..> CPol
+CCtrl ..> DSvc
+CCtrl ..> CModels
+CCtrl ..> CRoutes : "resources, apiResource"
+
+DRepair ..> DRecep
+DRepair ..> DWarr
+DRepair ..> DWallet : "generateInvoice"
+DAppt ..> DRecep
+DOrder ..> DCart
+DQuote ..> DOrder : "creates the Order"
+DMech ..> DRepair : "reads RepairOrder\nassigned_mechanic_id"
+DMisc ..> CRepo
+DSvc ..> CRepo : "declared but\nsecondary to direct Eloquent"
+
+DPay ..> DGateway
+DPay ..> DWallet : "WALLET_FUNDING\nnested credit"
+DSub ..> DGateway
+DWallet ..> CModels
+
+DAi ..> CAi
+CAi ..> IAi
+DSvc ..> CSrch
+
+DSvc ..> CEvt
+CCtrl ..> CEvt
+DSvc ..> CJob
+CJob ..> CQueue
+
+CRepo ..> CModels
+CModels ..> CDB
+CDB ..> CCache
+CModels ..> CFS
+CDB ..> CBlob
+CQueue ..> CRedis
+CCache ..> CRedis
+
+' --- external edges ---
+CEvt ..> CReverb : "ShouldBroadcast"
+CReverb ..> IReal
+CJob ..> CFcms : "SendPushNotificationJob\nFCM POST IS COMMENTED OUT"
+CJob ..> CMail
+DGateway ..> CNotch
+CNotch ..> IPay : "checkout_url + webhook"
+CAi ..> CGemini
+CAi ..> COpenAi
+CAi ..> COr
+CGeo ..> COsm
+
+' --- defects ---
+note bottom of CApi
+  <b>ApiService contract gaps</b>
+  * get() ignores its own
+    useCacheOnlyOnError param
+  * cache hit synthesises a 200 with
+    header x-cached-response:true —
+    never inspected by any service
+  * get/post throw localized
+    <i>Strings</i>, delete/patch/put
+    rethrow raw errors
+  * 3 overlapping namespaces for the
+    same order-status change
+end note
+
+note bottom of CNotch
+  <b>.env.example BUG</b>
+  NOTCHPAY_CALLBACK_URL=${APP_URL}/api/v1/
+  subscriptions/notchpay/callback
+  <b>that URI does not exist</b> —
+  live route is /api/subscriptions/
+  notchpay/callback
+end note
+
+note bottom of CCallSvc
+  <b>No media stack.</b>
+  Inbound calls arrive by FCM only.
+  Outbound ring = POST
+  conversations/{id}/call.
+  There is no WebRTC/SDP anywhere.
+end note
+
+note bottom of IMobile
+  <b>Unthrottled.</b> statefulApi() and
+  throttleApi() are absent from
+  bootstrap/app.php, so the api group
+  resolves to SubstituteBindings only
+  across all 328 routes.
+end note
+
+@enduml

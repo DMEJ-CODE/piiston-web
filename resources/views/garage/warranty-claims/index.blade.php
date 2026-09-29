@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Garanties')">
+<x-layouts::app :title="__('garage.Garanties')">
     <x-garage.index-header
         title="Garanties & SAV"
         subtitle="Suivi des réclamations de garantie - {{ $branch->name }}"

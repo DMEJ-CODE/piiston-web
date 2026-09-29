@@ -1,10 +1,10 @@
 <div class="max-w-4xl mx-auto py-10 px-4 sm:px-6 lg:px-8">
     <div class="mb-10 text-center">
         <h1 class="text-xl font-black uppercase tracking-tighter text-zinc-900 dark:text-white mb-2">
-            @if($step == 1) Configuration de votre Garage @elseif($step == 2) Profil de l'Entreprise @else Votre Siège Social @endif
+            @if($step == 1) Configure your Garage @elseif($step == 2) Company Profile @else Your Headquarters @endif
         </h1>
         <p class="text-zinc-500 font-medium max-w-lg mx-auto">
-            @if($step == 1) Choisissez comment vous souhaitez gérer vos activités sur PIISTON. @elseif($step == 2) Complétez les informations légales et commerciales de votre entreprise. @else Définissez les coordonnées de votre premier atelier. @endif
+            @if($step == 1) Choose how you want to manage your activities on PIISTON. @elseif($step == 2) Complete your company's legal and commercial information. @else Define the coordinates of your first workshop. @endif
         </p>
 
         <!-- Progress Steps -->
@@ -30,8 +30,8 @@
                         <flux:icon icon="wrench-screwdriver" class="size-10" />
                     </div>
                     <div>
-                        <h4 class="text-base font-black text-zinc-900 dark:text-white uppercase tracking-tight">Garage Unique</h4>
-                        <p class="text-xs text-zinc-500 font-medium leading-relaxed mt-2">Un seul atelier géré par vous-même. Idéal pour les garagistes indépendants.</p>
+<h4 class="text-base font-black text-zinc-900 dark:text-white uppercase tracking-tight">Single Garage</h4>
+<p class="text-xs text-zinc-500 font-medium leading-relaxed mt-2">A single workshop managed by yourself. Ideal for independent mechanics.</p>
                     </div>
                 </button>
 
@@ -40,8 +40,8 @@
                         <flux:icon icon="building-office-2" class="size-10" />
                     </div>
                     <div>
-                        <h4 class="text-base font-black text-zinc-900 dark:text-white uppercase tracking-tight">Réseau d'Annexes</h4>
-                        <p class="text-xs text-zinc-500 font-medium leading-relaxed mt-2">Gérez plusieurs sites (Succursales), déléguez la gestion locale et suivez les stats globales.</p>
+<h4 class="text-base font-black text-zinc-900 dark:text-white uppercase tracking-tight">Branch Network</h4>
+<p class="text-xs text-zinc-500 font-medium leading-relaxed mt-2">Manage multiple sites (Branches), delegate local management and track global stats.</p>
                     </div>
                 </button>
             </div>
@@ -64,15 +64,15 @@
                                 <input type="file" wire:model="company_logo" class="hidden">
                             </label>
                         </div>
-                        <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Logo de l'entreprise</span>
+                        <span class="text-[10px] font-black uppercase text-zinc-400 tracking-widest">Company Logo</span>
                     </div>
 
                     <!-- Basic Info -->
                     <div class="md:col-span-8">
-                        <flux:input wire:model="company_name" label="NOM COMMERCIAL" placeholder="Ex: Expert Auto Services" required />
+                        <flux:input wire:model="company_name" label="COMMERCIAL NAME" placeholder="Ex: Expert Auto Services" required />
                     </div>
                     <div class="md:col-span-4">
-                        <flux:select wire:model="country_id" label="PAYS">
+                        <flux:select wire:model="country_id" label="COUNTRY">
                             @foreach($countries as $country)
                                 <option value="{{ $country->id }}">{{ $country->name }}</option>
                             @endforeach
@@ -81,34 +81,34 @@
 
                     <!-- Legal Info -->
                     <div class="md:col-span-6">
-                        <flux:input wire:model="company_legal_name" label="RAISON SOCIALE" placeholder="Nom légal complet" />
+                        <flux:input wire:model="company_legal_name" label="LEGAL NAME" placeholder="Full legal name" />
                     </div>
                     <div class="md:col-span-3">
-                        <flux:input wire:model="company_registration_number" label="N° REGISTRE DU COMMERCE" placeholder="RCCM..." />
+                        <flux:input wire:model="company_registration_number" label="COMMERCIAL REGISTRY #" placeholder="Commercial Registry..." />
                     </div>
                     <div class="md:col-span-3">
-                        <flux:input wire:model="company_tax_number" label="N° CONTRIBUABLE (TIN)" placeholder="ID Fiscal..." />
+                        <flux:input wire:model="company_tax_number" label="TAX ID (TIN)" placeholder="Tax ID..." />
                     </div>
 
                     <!-- Contact & Web -->
                     <div class="md:col-span-4">
-                        <flux:input wire:model="company_email" label="EMAIL PROFESSIONNEL" type="email" required />
+                        <flux:input wire:model="company_email" label="PROFESSIONAL EMAIL" type="email" required />
                     </div>
                     <div class="md:col-span-4">
-                        <flux:input wire:model="company_phone" label="TÉLÉPHONE" required />
+                        <flux:input wire:model="company_phone" label="PHONE" required />
                     </div>
                     <div class="md:col-span-4">
-                        <flux:input wire:model="company_website" label="SITE WEB" placeholder="https://..." />
+                        <flux:input wire:model="company_website" label="WEBSITE" placeholder="https://..." />
                     </div>
 
                     <div class="md:col-span-12">
-                        <flux:textarea wire:model="company_description" label="DESCRIPTION" placeholder="Décrivez brièvement vos services et spécialités..." rows="3" />
+                        <flux:textarea wire:model="company_description" label="DESCRIPTION" placeholder="Briefly describe your services and specialties..." rows="3" />
                     </div>
                 </div>
 
                 <div class="flex items-center justify-between pt-6 border-t border-zinc-100 dark:border-white/5">
-                    <button type="button" wire:click="$set('step', 1)" class="text-xs font-black uppercase text-zinc-400 hover:text-zinc-600 transition-colors">Retour</button>
-                    <flux:button type="submit" variant="primary" class="px-10">Continuer</flux:button>
+                    <button type="button" wire:click="$set('step', 1)" class="text-xs font-black uppercase text-zinc-400 hover:text-zinc-600 transition-colors">Back</button>
+                    <flux:button type="submit" variant="primary" class="px-10">Continue</flux:button>
                 </div>
             </form>
 
@@ -125,37 +125,37 @@
                     </div>
 
                     <div class="md:col-span-12">
-                        <flux:input wire:model="branch_name" label="NOM DU SITE / ATELIER" placeholder="Ex: Siège Principal, Annexe Akwa..." required />
+                        <flux:input wire:model="branch_name" label="SITE / WORKSHOP NAME" placeholder="Ex: Main Headquarters, Downtown Branch..." required />
                     </div>
 
                     <div class="md:col-span-6">
-                        <flux:input wire:model="branch_email" label="EMAIL DU SITE" type="email" />
+                        <flux:input wire:model="branch_email" label="SITE EMAIL" type="email" />
                     </div>
                     <div class="md:col-span-6">
-                        <flux:input wire:model="branch_phone" label="TÉLÉPHONE DU SITE" />
+                        <flux:input wire:model="branch_phone" label="SITE PHONE" />
                     </div>
 
                     <div class="md:col-span-8">
-                        <flux:input wire:model="branch_address" label="ADRESSE PHYSIQUE" placeholder="Rue, quartier, points de repère..." />
+                        <flux:input wire:model="branch_address" label="PHYSICAL ADDRESS" placeholder="Street, district, landmarks..." />
                     </div>
                     <div class="md:col-span-4">
-                        <flux:input wire:model="branch_city" label="VILLE" placeholder="Ex: Douala" />
+                        <flux:input wire:model="branch_city" label="CITY" placeholder="Ex: New York" />
                     </div>
 
                     <!-- Geolocation -->
                     <div class="md:col-span-12 mt-4">
                         <div class="flex items-center justify-between mb-4">
-                            <h4 class="text-xs font-black uppercase text-zinc-900 dark:text-white tracking-widest">Géolocalisation</h4>
+                            <h4 class="text-xs font-black uppercase text-zinc-900 dark:text-white tracking-widest">Geolocation</h4>
                             <button type="button" onclick="detectLocation()" class="flex items-center gap-2 text-[10px] font-black uppercase text-[var(--active-2)] hover:opacity-80 transition-opacity">
                                 <flux:icon icon="map-pin" class="size-3" />
-                                Détecter ma position
+                                Detect my location
                             </button>
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <flux:input wire:model="latitude" label="LATITUDE" placeholder="0.000000" type="number" step="any" />
                             <flux:input wire:model="longitude" label="LONGITUDE" placeholder="0.000000" type="number" step="any" />
                         </div>
-                        <p class="text-[10px] text-zinc-500 font-medium mt-2">La géolocalisation permet à vos clients de vous trouver sur la carte.</p>
+                        <p class="text-[10px] text-zinc-500 font-medium mt-2">Geolocation allows your customers to find you on the map.</p>
                     </div>
                 </div>
 
@@ -166,17 +166,17 @@
                                 @this.set('latitude', position.coords.latitude);
                                 @this.set('longitude', position.coords.longitude);
                             }, function(error) {
-                                alert("Erreur lors de la détection de la position: " + error.message);
+                                alert("Error detecting location: " + error.message);
                             });
                         } else {
-                            alert("La géolocalisation n'est pas supportée par votre navigateur.");
+                            alert("Geolocation is not supported by your browser.");
                         }
                     }
                 </script>
 
                 <div class="flex items-center justify-between pt-6 border-t border-zinc-100 dark:border-white/5">
-                    <button type="button" wire:click="$set('step', 2)" class="text-xs font-black uppercase text-zinc-400 hover:text-zinc-600 transition-colors">Retour</button>
-                    <flux:button type="submit" variant="primary" class="px-10">Finaliser ma configuration</flux:button>
+                    <button type="button" wire:click="$set('step', 2)" class="text-xs font-black uppercase text-zinc-400 hover:text-zinc-600 transition-colors">Back</button>
+                    <flux:button type="submit" variant="primary" class="px-10">Complete my setup</flux:button>
                 </div>
             </form>
         @endif

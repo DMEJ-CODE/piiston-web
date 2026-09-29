@@ -7,8 +7,10 @@ use App\Http\Resources\Garages\AppointmentResource;
 use App\Models\Garages\GarageAppointment;
 use App\Models\Garages\GarageBranch;
 use App\Models\Garages\GarageCustomer;
+use App\Models\Garages\VehicleCheckIn;
 use App\Models\Vehicles\Vehicle;
 use App\Services\Identity\ActivityService;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -17,9 +19,12 @@ class AppointmentController extends Controller
 {
     protected $activityService;
 
-    public function __construct(ActivityService $activityService)
+    protected $notificationService;
+
+    public function __construct(ActivityService $activityService, NotificationService $notificationService)
     {
         $this->activityService = $activityService;
+        $this->notificationService = $notificationService;
     }
 
     public function index(): JsonResponse
@@ -42,8 +47,8 @@ class AppointmentController extends Controller
     {
         $validated = $request->validate([
             'vehicle_id' => 'required|exists:vehicles,id',
-            'branch_id' => 'nullable|exists:garage_branches,id',
-            'garage_id' => 'nullable|exists:garage_companies,id', // Fallback
+            'branch_id' => 'nullable',
+            'garage_id' => 'nullable',
             'service_id' => 'required|exists:garage_services,id',
             'scheduled_date' => 'required', // Can be full datetime or just date
             'scheduled_time' => 'nullable|string',
@@ -53,12 +58,26 @@ class AppointmentController extends Controller
 
         $branchId = $validated['branch_id'] ?? null;
 
+        if ($branchId) {
+            $branch = GarageBranch::find($branchId);
+            if (! $branch) {
+                $branch = GarageBranch::where('company_id', $branchId)->first();
+            }
+            if ($branch) {
+                $branchId = $branch->id;
+            }
+        }
+
         if (! $branchId && isset($validated['garage_id'])) {
             $branchId = GarageBranch::where('company_id', $validated['garage_id'])->first()?->id;
         }
 
         if (! $branchId) {
-            return response()->json(['message' => 'Branch could not be resolved'], 422);
+            $branchId = GarageBranch::first()?->id;
+        }
+
+        if (! $branchId) {
+            return response()->json(['message' => 'Branch could not be resolved. Please select a valid garage.'], 422);
         }
 
         $vehicle = Vehicle::findOrFail($validated['vehicle_id']);
@@ -91,6 +110,18 @@ class AppointmentController extends Controller
             'notes' => $validated['notes'] ?? null,
         ]);
 
+        // Create VehicleCheckIn record so garage and owner have a record of the vehicle in service
+        VehicleCheckIn::firstOrCreate([
+            'appointment_id' => $appointment->id,
+        ], [
+            'branch_id' => $branchId,
+            'vehicle_id' => $validated['vehicle_id'],
+            'customer_id' => $customer->id,
+            'received_by' => $appointment->branch->company->owner_id ?? Auth::id(),
+            'arrival_date' => $scheduledAt,
+            'status' => 'SCHEDULED',
+        ]);
+
         // Log activity
         $this->activityService->log(
             Auth::user(),
@@ -99,6 +130,18 @@ class AppointmentController extends Controller
             "Votre rendez-vous pour {$appointment->service->name} le {$appointment->scheduled_date} a été enregistré.",
             $appointment
         );
+
+        // Notify Branch/Garage Owner
+        $branchOwner = $appointment->branch->company->owner ?? null;
+        if ($branchOwner) {
+            $this->notificationService->send(
+                $branchOwner,
+                'NEW_APPOINTMENT',
+                'Nouveau rendez-vous',
+                "Un nouveau rendez-vous a été pris pour le véhicule {$vehicle->brand->name} {$vehicle->model->name} le {$appointment->scheduled_date}.",
+                ['reference_type' => 'GarageAppointment', 'reference_id' => $appointment->id, 'category' => 'Repair']
+            );
+        }
 
         return response()->json([
             'message' => 'Appointment booked successfully',

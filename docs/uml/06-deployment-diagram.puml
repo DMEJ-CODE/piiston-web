@@ -1,0 +1,285 @@
+@startuml
+' ============================================================================
+' Piiston - Deployment Diagram
+' Client devices, Laravel app tier, workers, and stateful/external infra.
+' Env var names are the literal keys read by config/*.php.
+' ============================================================================
+
+title Piiston — Deployment Diagram
+
+actor "Vehicle Owner" as AOwner
+actor "Mechanic / Garage Staff" as AMech
+actor "Spare-Part Seller" as ASeller
+actor "Fleet Manager" as AFleet
+actor "Platform Admin" as AAdmin
+
+' ======================= CLIENT / EDGE TIER ================================
+
+node "Android Device\n(audience: vehicle owners,\nmechanics, sellers)" as DevAndroid {
+  artifact "APK / App Bundle\nflutter build apk --release\nminSdk 21" as Apk
+  component "Piiston (Flutter 3.9 / Dart ^3.9.2)\n84 named routes · 46 services" as AppA
+  database "Keystore\nFlutterSecureStorage 'auth_token'" as Keystore
+  database "SharedPreferences\npiiston_cache_* · theme_mode" as SPrefs
+  component "FCM client (Firebase SDK)\nflutter_local_notifications" as FcmCli
+  component "flutter_map + geolocator\n(OSM raster tiles)" as GeoCli
+  component "pusher_channels_flutter\nuseTLS: false" as PushCli
+  node "Android Keystore /\niOS Keychain" as OSKeystore
+}
+
+node "iOS Device\naudience: same" as DevIOS {
+  artifact "IPA\nflutter build ipa" as Ipa
+  component "Piiston (same codebase)" as AppI
+  node "iOS Keychain" as Keychain
+}
+
+node "Desktop / Web (dev only)\nFlutter web, linux, macos, windows" as DevDesk {
+  component "Piiston\nbaseUrl -> 127.0.0.1:8000" as AppD
+}
+
+node "<<actor>>\nBrowser\nGarage back-office · Admin" as Browser {
+  component "Blade + Livewire 4 + Flux UI\nTailwind 4 (Vite build)\nEcho + Reverb JS client" as WebClient
+}
+
+' ======================= EDGE / INGRESS ====================================
+
+node "<<device>>\nEdge\n(Cloudflare / Nginx / Caddy)" as Edge {
+  component "TLS termination\nHTTP :8000 (dev, cleartext)" as Tls
+  component "Static assets\npublic/build (Vite manifest)\npublic/storage -> S3 symlink" as Static
+}
+
+' ======================= APPLICATION TIER =================================
+
+package "<<compute>>\nLaravel Cloud / VPS · Docker Compose" as AppTier {
+
+  node "web-1  (php-fpm 8.4 + nginx)" as WebNode {
+    component "Laravel 13 HTTP\nroutes/web.php  (Landing, ~100 garage.*,\n  16 admin Livewire, Fortify auth)\nroutes/api.php (328 mobile routes)\nroutes/admin.php · routes/settings.php" as Web
+    component "Vite manifest reader\n+ asset serving" as Assets
+  }
+
+  node "api-1  (same image, php-fpm)" as ApiNode {
+    component "Laravel 13 HTTP\nroutes/api.php — 328 routes\nJSON forced for api/*\nmiddleware: SubstituteBindings ONLY" as Api
+    note right
+      <b>MISSING from bootstrap/app.php</b>
+      * statefulApi()  -> token-only Sanctum,
+        no SPA cookie session
+      * throttleApi()  -> the WHOLE 328-route
+        surface is unthrottled
+    end note
+  }
+
+  node "ws-1  (php artisan reverb:start)" as WsNode {
+    component "Laravel Reverb 1\nREVERB_HOST:443 (TLS)\nREVERB_SERVER:8080 (internal)\nREVERB_APP_ID/KEY/SECRET\nREVERB_APP_PING_INTERVAL\nREVERB_APP_ACTIVITY_TIMEOUT\nREVERB_APP_MAX_CONNECTIONS\nREVERB_APP_RATE_LIMITING_*" as Reverb
+    note right
+      <b>config/reverb.php</b>
+      allowed_origins => ['*']  <b>WILDCARD</b>
+      REVERB_SCALING_ENABLED requires Redis
+    end note
+  }
+
+  node "worker-1  (php artisan queue:work)" as Worker1 {
+    component "Notifications\\SendPushNotificationJob\nNotifications\\SendEmailNotificationJob\nNotifications\\SendSmsNotificationJob\nBI\\AggregatePlatformMetricsJob\nSystemAgent\\ProcessReminderJob" as W1
+  }
+
+  node "worker-2" as Worker2 {
+    component "spare capacity\nhorizontally scalable" as W2
+  }
+
+  node "scheduler" as Sched {
+    component "external cron / platform scheduler" as Cron
+    component "php artisan system-agent:run --all-due\n-> dispatches ProcessReminderJob per\n   Reminder where enabled AND\n   (cron_expression IS NOT NULL\n    OR run_at <= now)" as RunAgent
+    note right
+      <b>routes/console.php has NO Schedule::</b>
+      and bootstrap/app.php calls no
+      withSchedule(). scheduler:run will
+      NEVER fire this. An external cron
+      entry is mandatory or every reminder
+      / AI feature silently does nothing.
+    end note
+  }
+}
+
+' ======================= DATA TIER ========================================
+
+database "RDBMS\nDB_CONNECTION (default sqlite)\nDB_HOST · DB_PORT · DB_DATABASE\nDB_USERNAME · DB_PASSWORD\nDB_SSLMODE · MYSQL_ATTR_SSL_CA" as DB {
+  storage "≈300 tables across 20 domains\nusers · roles · permissions\nvehicles · vehicle_maintenances\ngarage_companies · garage_branches\nrepair_orders · repair_estimates\nrepair_tasks · emergency_requests\ngarage_appointments · vehicle_check_ins\nproduct_listings · orders · order_items\ndeliveries · part_requests · part_quotes\npayment_transactions · wallets\nuser_subscriptions · conversations\nmessages · message_statuses\nnotifications · user_devices\nai_* · bi_* · dms_* · maps_*\nintegrations_* · promotions_*" as Tables
+  storage "jobs · job_batches\nfailed_jobs\nsessions\ncache · cache_locks" as QueueTbl
+}
+
+database "Cache\nCACHE_STORE=database (default)\nredis | memcached | file\nmemcached | dynamodb | octane" as Cache
+
+database "Redis\nREDIS_CLIENT=phpredis\nREDIS_HOST · REDIS_PORT=6379\nREDIS_PASSWORD · REDIS_DB=0\nREDIS_CACHE_DB=1\nREQUIRED by REVERB_SCALING" as Redis
+
+node "<<compute>>\nObject Storage" as Blob {
+  storage "FILESYSTEM_DISK=local (default)\nstorage/app/private\nstorage/app/public\n-> public/storage symlink" as LocalDisk
+  storage "S3 / MinIO / Cloudflare R2 /\nDigitalOcean Spaces\nAWS_ACCESS_KEY_ID\nAWS_SECRET_ACCESS_KEY\nAWS_DEFAULT_REGION · AWS_BUCKET\nAWS_ENDPOINT · AWS_URL\nAWS_USE_PATH_STYLE_ENDPOINT" as S3
+}
+
+' ======================= EXTERNAL / SAAS =================================
+
+cloud "Google Gemini\ngenerativelanguage\n.googleapis.com" as Gemini <<external>>
+cloud "OpenAI\nOPENAI_API_KEY\n<color:#b00>NOT declared in\nconfig/services.php</color>" as OpenAi <<external>>
+cloud "OpenRouter\nopenrouter.ai/api/v1\nOPENROUTER_API_KEY" as OpenRouter <<external>>
+
+cloud "NotchPay (payment gateway)\napi.notchpay.co\nNOTCHPAY_API_KEY\nNOTCHPAY_BASE_URL\nNOTCHPAY_WEBHOOK_SECRET" as Notch <<external>>
+
+cloud "Firebase Cloud Messaging\nFIREBASE_PROJECT_ID" as Fcm <<external>>
+
+cloud "Mail transport\nMAIL_MAILER (default log)\nsmtp · ses · postmark\nresend · sendmail\nMAIL_HOST · MAIL_PORT=2525\nMAIL_USERNAME · MAIL_PASSWORD\nPOSTMARK_API_KEY · RESEND_API_KEY" as Mail <<external>>
+
+cloud "Papertrail / Slack\nPAPERTRAIL_URL · PAPERTRAIL_PORT\nSLACK_BOT_USER_OAUTH_TOKEN" as Log <<external>>
+
+cloud "OpenStreetMap raster tiles\nconsumed CLIENT-SIDE by\nflutter_map" as Osm <<external>>
+
+cloud "Passthrough SMS provider\n<color:#b00>NOT CONFIGURED</color>" as Sms <<external>>
+
+cloud "Meilisearch / Elasticsearch\n<color:#b00>NOT WIRED — LocalSearchProvider\nis hardcoded</color>" as Meili <<external>>
+
+cloud "Google Maps / Mapbox / OSRM\n<color:#b00>NOT INTEGRATED —\nMapProviderService does Haversine\nin PHP only</color>" as Maps <<external>>
+
+' ======================= PROTOCOL FLOWS ===================================
+
+AOwner --> AppA
+AOwner --> Browser
+AMech --> Browser
+ASeller --> AppA
+
+AppA -[#blue,dashed]-> Tls : "HTTP :8000\n/api/* (cleartext dev)"
+AppA -[#blue,dashed]-> Tls : "Pusher MT1\nprivate-conversation.{id}\n<color:#b00>useTLS: false</color>"
+AppA -[#blue,dashed]-> Tls : "FCM registration\nPOST notification-devices/register"
+AppA -[#blue]-> Osm : tiles
+AppI -[#blue,dashed]-> Tls
+AppD -[#blue,dashed]-> Tls : "127.0.0.1:8000"
+Browser --> Tls : "HTTPS\nsession cookie + CSRF"
+Browser --> Edge : assets
+
+Tls --> Static
+Tls --> Web
+Tls --> Api
+
+Web --> DB
+Api --> DB
+Api --> Cache
+Web --> Cache
+Web --> S3 : avatars · estimates · documents
+Api --> S3 : product media · chat media
+Api --> Redis
+Web --> Redis
+Api --> Reverb : "broadcast ShouldBroadcast"
+Reverb --> Redis : "REVERB_SCALING_ENABLED"
+
+W1 --> DB
+W1 --> Redis
+W1 --> Notch
+W1 --> Mail
+W1 --> Fcm : "<color:#b00>Http::post to fcm.googleapis.com\nIS COMMENTED OUT in\nSendPushNotificationJob:79</color>"
+W1 --> Sms
+W2 ..> W1 : scale out
+Cron --> RunAgent
+RunAgent --> DB
+RunAgent --> W1 : ProcessReminderJob
+
+Api --> Gemini
+Api --> OpenRouter
+Api --> OpenAi : "<color:#b00>works only via env()\nfallback — breaks when\nconfig is cached</color>"
+Api --> Notch : "initialize()\n-> checkout_url"
+Notch --> Api : "GET /api/payments/notchpay/callback\nGET /api/payments/notchpay/webhook\nGET /api/subscriptions/notchpay/callback\nPOST /api/subscriptions/notchpay/webhook\n<color:#b00>withoutMiddleware('auth:sanctum')\nHMAC-SHA256 signed</color>"
+Notch --> Web : "/garage/subscriptions/notchpay/callback"
+Api --> Meili : "<color:#b00>dashed, absent</color>"
+Api --> Maps : "<color:#b00>dashed, absent</color>"
+
+' ======================= DEPLOYMENT CONSTRAINTS ==========================
+
+note as N1
+  <b>BROADCAST_CONNECTION</b>
+  config/broadcasting.php defaults to
+  <b>null</b>. All 4 broadcast events
+  (MessageSent, UserTyping, CallStarted,
+  NotificationSent) are NO-OPS unless
+  BROADCAST_CONNECTION=reverb is set.
+  .env.example still says <b>log</b>.
+end note
+
+note as N2
+  <b>CLIENT HOST IS HARDCODED</b>
+  lib/services/api_service.dart
+    _serverIp   = '192.168.251.219'
+    _emulatorIp = '10.0.2.2'
+    _isEmulator = false
+  No dart-define, no --dart-define-from-file,
+  no flavor matrix. Switching target means
+  editing source and recompiling. Plain HTTP,
+  no certificate pinning.
+end note
+
+note as N3
+  <b>AUTH CHANNEL</b>
+  * Mobile: Authorization: Bearer <auth_token>
+    (Sanctum personal access token)
+  * Web:    session cookie + CSRF
+  * /broadcasting/auth is NOT declared in
+    any route file — it relies on
+    BroadcastServiceProvider auto-registration.
+  * /api is NOT stateful, so the mobile client
+    must send the bearer token to that endpoint.
+  * Channels (routes/channels.php, both
+    correctly authorized):
+      App.Models.User.{id}
+      conversation.{conversationId}
+end note
+
+note as N4
+  <b>ENV KEYS AUDITED FOR THIS DIAGRAM</b>
+  APP_URL · APP_KEY · APP_DEBUG
+  DB_* · REDIS_* · CACHE_STORE
+  QUEUE_CONNECTION · QUEUE_FAILED_DRIVER
+  FILESYSTEM_DISK · AWS_*
+  BROADCAST_CONNECTION
+  REVERB_{APP_ID,APP_KEY,APP_SECRET,HOST,PORT,SCHEME,
+    SERVER,SERVER_HOST,SERVER_PORT,SERVER_PATH,
+    SCALING_ENABLED,SCALING_CHANNEL,ALLOW_CLIENT_*}
+  VITE_REVERB_{APP_KEY,HOST,PORT,SCHEME} <b>(undocumented)</b>
+  GEMINI_API_KEY (only AI key in .env.example)
+  OPENAI_API_KEY / OPENROUTER_API_KEY <b>(absent from .env.example)</b>
+  NOTCHPAY_{API_KEY,BASE_URL,CALLBACK_URL,
+    GARAGE_CALLBACK_URL,PAYMENT_CALLBACK_URL,WEBHOOK_SECRET}
+  MAIL_{MAILER,SCHEME,HOST,PORT,USERNAME,PASSWORD}
+  POSTMARK_API_KEY · RESEND_API_KEY
+  FIREBASE_PROJECT_ID <b>(read but job disabled)</b>
+  SANCTUM_{STATEFUL_DOMAINS,TOKEN_PREFIX}
+  PASSKEYS_USER_HANDLE_SECRET
+  AUTH_GUARD · AUTH_PASSWORD_BROKER
+  LOG_SLACK_WEBHOOK_URL · PAPERRAIL_*
+end note
+
+note bottom of Reverb
+  <b>FIREBASE_PROJECT_ID IS READ BUT COMMENTED OUT</b>
+  app/Jobs/Notifications/SendPushNotificationJob.php:79
+  The Http::post() to fcm.googleapis.com is
+  disabled, so push delivery is inert even
+  though the client registers device tokens.
+  Inbound calls depend on FCM — with push
+  broken, incoming call notifications
+  (reference_type == 'call') never arrive.
+end note
+
+note bottom of Apk
+  <b>FLUTTER PACKAGE DEPS (pubspec.yaml)</b>
+  http · shared_preferences · flutter_secure_storage
+  local_auth · geolocator · flutter_map · latlong2
+  firebase_core · firebase_messaging
+  flutter_local_notifications · permission_handler
+  pusher_channels_flutter · lottie · hugeicons
+  speech_to_text · image_picker · file_picker
+  cached_network_image · intl · url_launcher
+  google_nav_bar · persistent_bottom_nav_bar
+  flutter_launcher_icons (dev)
+end note
+
+note bottom of WebNode
+  <b>WEB BUILD</b>
+  npm run dev / npm run build (Vite + Tailwind 4)
+  composer run dev  (Laravel + queue + Vite)
+  Livewire 4 + Flux UI (views/flux overrides)
+end note
+
+@enduml

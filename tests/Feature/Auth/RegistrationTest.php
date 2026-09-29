@@ -12,6 +12,8 @@ test('registration screen can be rendered', function () {
     $response->assertOk();
     $response->assertSee('split-auth-container', false);
     $response->assertSee('split-auth-visual-pane', false);
+    $response->assertSee('Drive with', false);
+    $response->assertSee('Built for the way Africa moves', false);
 });
 
 test('new users can register', function () {

@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Commandes Fournisseurs')">
+<x-layouts::app :title="__('garage.Commandes Fournisseurs')">
     <x-garage.index-header
         title="Commandes Fournisseurs"
         subtitle="Suivi des achats de pièces - {{ $branch->name }}"

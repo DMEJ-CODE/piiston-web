@@ -6,6 +6,7 @@ use App\Models\Garages\RepairOrder;
 use App\Models\Garages\RepairPart;
 use App\Models\Workflows\ServiceRequest;
 use App\Repositories\Workflows\RepairRepositoryInterface;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -13,9 +14,12 @@ class RepairService
 {
     protected $repairRepository;
 
-    public function __construct(RepairRepositoryInterface $repairRepository)
+    protected $notificationService;
+
+    public function __construct(RepairRepositoryInterface $repairRepository, NotificationService $notificationService)
     {
         $this->repairRepository = $repairRepository;
+        $this->notificationService = $notificationService;
     }
 
     public function createRequest(array $data): ServiceRequest
@@ -62,6 +66,17 @@ class RepairService
 
             $repair->update(['status' => RepairOrder::STATUS_QUOTE_CREATED]);
             $this->logProgress($repair, 'Quotation generated and sent for internal review.');
+
+            // Notify Customer
+            if ($repair->customer && $repair->customer->user) {
+                $this->notificationService->send(
+                    $repair->customer->user,
+                    'REPAIR_ESTIMATE_READY',
+                    'Devis de réparation prêt',
+                    "Le devis pour la réparation #{$repair->id} est disponible pour validation.",
+                    ['reference_type' => 'RepairOrder', 'reference_id' => $repair->id, 'category' => 'Repair']
+                );
+            }
 
             return $estimate;
         });
@@ -128,6 +143,17 @@ class RepairService
             ]);
 
             $this->logProgress($repair, 'Repair work completed. Ready for quality check.');
+
+            // Notify Customer
+            if ($repair->customer && $repair->customer->user) {
+                $this->notificationService->send(
+                    $repair->customer->user,
+                    'REPAIR_COMPLETED',
+                    'Réparation terminée',
+                    "Les travaux sur votre véhicule ({$repair->vehicle->brand->name}) sont terminés.",
+                    ['reference_type' => 'RepairOrder', 'reference_id' => $repair->id, 'category' => 'Repair']
+                );
+            }
 
             // Automatically add to Vehicle Maintenance Log (Carnet de soin)
             $repair->vehicle->maintenances()->create([

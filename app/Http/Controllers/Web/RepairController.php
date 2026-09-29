@@ -73,7 +73,7 @@ class RepairController extends Controller
         $branch = $request->attributes->get('garageBranch');
         $this->authorize('operate', $branch);
 
-        $request->validate([
+        $validated = $request->validate([
             'customer_id' => ['required', 'exists:garage_customers,id'],
             'vehicle_id' => ['required', 'exists:vehicles,id'],
             'problem_description' => ['required', 'string', 'max:2000'],
@@ -82,7 +82,7 @@ class RepairController extends Controller
             'workshop_bay_id' => ['nullable', 'exists:workshop_bays,id'],
         ]);
 
-        $repair = RepairOrder::create(array_merge($request->validated(), [
+        $repair = RepairOrder::create(array_merge($validated, [
             'branch_id' => $branch->id,
             'status' => 'REQUESTED',
         ]));

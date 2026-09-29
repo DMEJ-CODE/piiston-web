@@ -7,6 +7,11 @@ test('login screen can be rendered', function () {
     $response = $this->get(route('login'));
 
     $response->assertOk();
+    $response->assertSee('auth-panel-orbit', false);
+    $response->assertSee('Drive with', false);
+    $response->assertSee('Your road. Connected.', false);
+    $response->assertSee('Google', false);
+    $response->assertSee('Apple', false);
 });
 
 test('users can authenticate using the login screen', function () {

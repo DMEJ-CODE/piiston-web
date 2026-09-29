@@ -2,11 +2,18 @@
 
 namespace App\Http\Resources\Identity;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
+/**
+ * @mixin User
+ */
 class UserResource extends JsonResource
 {
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray(Request $request): array
     {
         return [
@@ -20,6 +27,13 @@ class UserResource extends JsonResource
             'currency' => [
                 'code' => $this->country->currency->code ?? 'XAF',
                 'symbol' => $this->country->currency->symbol ?? 'FCFA',
+            ],
+            // Mirrors the `languages.code` the API accepts on write, so clients
+            // can round-trip the preference without a second lookup.
+            'language' => [
+                'id' => $this->language_id,
+                'code' => $this->preferredLanguage->code ?? 'en',
+                'name' => $this->preferredLanguage->name ?? 'English',
             ],
             'roles' => $this->roles->pluck('name'),
             'presence' => $this->presence ? [

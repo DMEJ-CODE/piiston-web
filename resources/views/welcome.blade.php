@@ -31,10 +31,10 @@
                 <a href="#solutions" class="lp-nav__link">Solutions</a>
                 <a href="#ecosystem" class="lp-nav__link">Ecosystem</a>
                 <a href="#marketplace" class="lp-nav__link">Marketplace</a>
-                <a href="#fleet" class="lp-nav__link">Fleet</a>
                 <a href="#ai-piiston" class="lp-nav__link">AI</a>
                 <a href="#africa-coverage" class="lp-nav__link">Coverage</a>
                 <a href="#comparison" class="lp-nav__link">Why Us</a>
+                <a href="{{ route('pricing.index') }}" class="lp-nav__link">Pricing</a>
                 <a href="#blog" class="lp-nav__link">Blog</a>
                 <a href="#contact" class="lp-nav__link">Contact</a>
                 <a href="#faq" class="lp-nav__link">FAQ</a>
@@ -114,6 +114,10 @@
             <a href="#comparison" class="lp-mobile-nav__link">
                 <i class="hgi-stroke hgi-help-circle hgi-sm"></i>
                 Why Piiston
+            </a>
+            <a href="{{ route('pricing.index') }}" class="lp-mobile-nav__link">
+                <i class="hgi-stroke hgi-ticket-01 hgi-sm"></i>
+                Pricing
             </a>
             <a href="#blog" class="lp-mobile-nav__link">
                 <i class="hgi-stroke hgi-book-open-01 hgi-sm"></i>
@@ -288,7 +292,7 @@
         <hr class="lp-divider">
     </section>
 
-    <!-- 4. WHY PIISTON -->
+    <!-- 5. WHY PIISTON -->
     <section id="why-piiston" class="lp-section-vh section-bg-b">
         <div class="lp-container">
             <div style="text-align: center; max-width: 680px; margin: 0 auto 36px;" class="reveal">
@@ -341,73 +345,6 @@
                     <div class="problem-card__role">Fleet Managers</div>
                     <div class="problem-card__title">High Costs</div>
                     <div class="problem-card__desc">Fuel leaks, unexpected breakdowns, lack of GPS telematics.</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 5. ECOSYSTEM ORBITAL -->
-    <section id="ecosystem" class="lp-section-vh section-bg-a">
-        <div class="lp-container">
-            <div style="text-align: center; max-width: 640px; margin: 0 auto 16px;" class="reveal">
-                <div class="section-eyebrow section-eyebrow--brand">Connected Architecture</div>
-                <h2 class="section-title section-title--brand">The Piiston Orbital Ecosystem</h2>
-                <p class="section-subtitle">Hover over any satellite node to see how every player is synchronized.</p>
-            </div>
-
-            <div class="ecosystem__arena reveal">
-                <div class="ecosystem__center">
-                    <span style="font-size: 15px; font-weight: 900; letter-spacing: -0.5px;">PIISTON</span>
-                    <span style="font-size: 9px; opacity: 0.7; font-weight: 600;">CORE HUB</span>
-                </div>
-
-                <div class="orbit-ring orbit-ring--1"></div>
-                <div class="orbit-ring orbit-ring--2"></div>
-                <div class="orbit-ring orbit-ring--3"></div>
-
-                <div class="orbit-node" style="top: 15%; left: 45%;">
-                    <div class="orbit-node__bubble"><i class="hgi-stroke hgi-car-01"></i></div>
-                    <span class="orbit-node__label">Car Owners</span>
-                    <div class="ecosystem__tooltip">
-                        <div class="ecosystem__tooltip-title">Vehicle Owner Vault</div>
-                        <div class="ecosystem__tooltip-desc">Digital passport, service alerts, certified garage booking & MoMo payments.</div>
-                    </div>
-                </div>
-
-                <div class="orbit-node" style="top: 35%; left: 78%;">
-                    <div class="orbit-node__bubble"><i class="hgi-stroke hgi-garage"></i></div>
-                    <span class="orbit-node__label">Garages</span>
-                    <div class="ecosystem__tooltip">
-                        <div class="ecosystem__tooltip-title">Garage ERP</div>
-                        <div class="ecosystem__tooltip-desc">Workshop lifts, mechanics task dispatch & automated digital quotes.</div>
-                    </div>
-                </div>
-
-                <div class="orbit-node" style="top: 72%; left: 65%;">
-                    <div class="orbit-node__bubble"><i class="hgi-stroke hgi-wrench-01"></i></div>
-                    <span class="orbit-node__label">Mechanics</span>
-                    <div class="ecosystem__tooltip">
-                        <div class="ecosystem__tooltip-title">Technician App</div>
-                        <div class="ecosystem__tooltip-desc">AI diagnostic guides, photo/video repair evidence & job cards.</div>
-                    </div>
-                </div>
-
-                <div class="orbit-node" style="top: 72%; left: 25%;">
-                    <div class="orbit-node__bubble"><i class="hgi-stroke hgi-store-01"></i></div>
-                    <span class="orbit-node__label">Marketplace</span>
-                    <div class="ecosystem__tooltip">
-                        <div class="ecosystem__tooltip-title">OEM Parts Market</div>
-                        <div class="ecosystem__tooltip-desc">Verified auto parts, express courier delivery & Escrow protection.</div>
-                    </div>
-                </div>
-
-                <div class="orbit-node" style="top: 35%; left: 12%;">
-                    <div class="orbit-node__bubble"><i class="hgi-stroke hgi-truck"></i></div>
-                    <span class="orbit-node__label">Fleets</span>
-                    <div class="ecosystem__tooltip">
-                        <div class="ecosystem__tooltip-title">Fleet Telematics</div>
-                        <div class="ecosystem__tooltip-desc">GPS tracking, fuel consumption logs & driver safety scoring.</div>
-                    </div>
                 </div>
             </div>
         </div>
@@ -1830,7 +1767,140 @@
         </div>
     </section>
 
-    <!-- 17. ENHANCED RICH FOOTER -->
+    <!-- 17. PRICING SECTION (Premium Positioned) -->
+    <section id="pricing" class="lp-section-vh section-bg-c" style="background: linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(99,102,241,0.05) 100%);">
+        <div class="lp-container">
+            <div style="text-align: center; max-width: 720px; margin: 0 auto 48px;" class="reveal">
+                <div class="section-eyebrow section-eyebrow--brand" style="color: #3b82f6; letter-spacing: 0.5px;">SUBSCRIPTION PLANS</div>
+                <h2 class="section-title section-title--brand" style="margin-top: 12px; font-size: 42px; line-height: 1.2;">Simple, Transparent Pricing for Every Business Size</h2>
+                <p class="section-subtitle" style="color: rgba(255,255,255,0.75); margin-top: 16px;">No hidden fees. Scale up or down anytime. Pay monthly or annually and get instant access to all features included in your plan.</p>
+            </div>
+
+            @php
+                $pricingPlans = \App\Models\Finance\SubscriptionPlan::where('status', true)
+                    ->orderBy('price')
+                    ->limit(3)
+                    ->get()
+                    ->map(function ($plan) {
+                        return (object) [
+                            'id' => $plan->id,
+                            'name' => ucfirst($plan->name),
+                            'price' => $plan->price,
+                            'currency' => $plan->currency,
+                            'duration' => $plan->duration,
+                            'description' => $plan->description,
+                            'features' => is_array($plan->features) ? $plan->features : ($plan->features ? json_decode($plan->features, true) : []),
+                        ];
+                    });
+
+                if ($pricingPlans->isEmpty()) {
+                    $pricingPlans = collect([
+                        new stdClass(),
+                        new stdClass(),
+                        new stdClass(),
+                    ]);
+                    $pricingPlans[0]->id = 1;
+                    $pricingPlans[0]->name = 'Starter';
+                    $pricingPlans[0]->price = 25000;
+                    $pricingPlans[0]->currency = (object) ['code' => 'XAF', 'symbol' => 'CFA'];
+                    $pricingPlans[0]->duration = 'month';
+                    $pricingPlans[0]->description = 'For solo workshops and small operators.';
+                    $pricingPlans[0]->features = ['Job cards', 'Customer management', 'Basic reports'];
+
+                    $pricingPlans[1]->id = 2;
+                    $pricingPlans[1]->name = 'Growth';
+                    $pricingPlans[1]->price = 60000;
+                    $pricingPlans[1]->currency = (object) ['code' => 'XAF', 'symbol' => 'CFA'];
+                    $pricingPlans[1]->duration = 'month';
+                    $pricingPlans[1]->description = 'For active teams and growing garages.';
+                    $pricingPlans[1]->features = ['Everything in Starter', 'Team management', 'Multi-branch', 'Inventory'];
+
+                    $pricingPlans[2]->id = 3;
+                    $pricingPlans[2]->name = 'Scale';
+                    $pricingPlans[2]->price = 120000;
+                    $pricingPlans[2]->currency = (object) ['code' => 'XAF', 'symbol' => 'CFA'];
+                    $pricingPlans[2]->duration = 'month';
+                    $pricingPlans[2]->description = 'For multi-branch fleets and larger businesses.';
+                    $pricingPlans[2]->features = ['Everything in Growth', 'API access', 'Custom integrations', 'Priority support'];
+                }
+            @endphp
+
+            <div class="grid gap-8 md:grid-cols-3" style="max-width: 1200px; margin: 0 auto;">
+                @foreach($pricingPlans as $plan)
+                    @php($isFeaturedPlan = $loop->iteration === (int) ceil($loop->count / 2))
+                    <div class="reveal" style="position: relative; @if($isFeaturedPlan) transform: scale(1.05); z-index: 10; @endif">
+                        @if($isFeaturedPlan)
+                            <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; padding: 6px 16px; border-radius: 20px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px; text-transform: uppercase;">Most Popular</div>
+                        @endif
+                        <div style="background: rgba(255,255,255,0.95); border: 2px solid @if($isFeaturedPlan) #3b82f6 @else rgba(59,130,246,0.2) @endif; border-radius: 24px; padding: 32px; height: 100%; display: flex; flex-direction: column; box-shadow: @if($isFeaturedPlan) 0 20px 50px rgba(59,130,246,0.3) @else 0 10px 30px rgba(0,0,0,0.08) @endif; transition: all 0.3s ease;" class="pricing-card hover:shadow-lg hover:scale-105">
+                            <!-- Header -->
+                            <div style="margin-bottom: 24px;">
+                                <h3 style="font-size: 24px; font-weight: 900; color: #111827; letter-spacing: -0.5px;">{{ $plan->name }}</h3>
+                                <p style="font-size: 14px; color: #6b7280; margin-top: 6px; line-height: 1.5;">{{ $plan->description }}</p>
+                            </div>
+
+                            <!-- Price -->
+                            <div style="margin-bottom: 28px; padding: 20px; background: linear-gradient(135deg, rgba(59,130,246,0.08), rgba(99,102,241,0.08)); border-radius: 16px;">
+                                <div style="display: flex; align-items: baseline; gap: 6px;">
+                                    <span style="font-size: 44px; font-weight: 900; color: #111827;">{{ number_format($plan->price, 0, ',', ' ') }}</span>
+                                    <span style="font-size: 16px; color: #6b7280; font-weight: 600;">{{ $plan->currency?->code ?? 'XAF' }} <span style="display: block; font-size: 12px; font-weight: 500;">/{{ $plan->duration }}</span></span>
+                                </div>
+                            </div>
+
+                            <!-- Features -->
+                            <ul style="margin-bottom: 32px; flex: 1; space-y: 0;">
+                                @foreach(($plan->features ?? ['Full feature set included']) as $feature)
+                                    <li style="display: flex; align-items: start; gap: 12px; margin-bottom: 14px; font-size: 14px; color: #374151;">
+                                        <span style="display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; background: linear-gradient(135deg, #3b82f6, #6366f1); color: white; border-radius: 50%; flex-shrink: 0; font-weight: 700; font-size: 12px;">✓</span>
+                                        <span>{{ str_replace('_', ' ', ucfirst($feature)) }}</span>
+                                    </li>
+                                @endforeach
+                            </ul>
+
+                            <!-- CTA Button -->
+                            <a href="{{ route('pricing.show', ['plan' => $plan->id]) }}" style="display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px 24px; border-radius: 12px; font-weight: 700; font-size: 14px; text-decoration: none; transition: all 0.3s ease; background: @if($isFeaturedPlan) linear-gradient(135deg, #3b82f6, #6366f1) @else #f3f4f6 @endif; color: @if($isFeaturedPlan) white @else #111827 @endif; border: 2px solid @if($isFeaturedPlan) transparent @else #e5e7eb @endif;" class="pricing-btn hover:@if($isFeaturedPlan) shadow-lg @else bg-zinc-100 @endif">
+                                <span>View Plan Details</span>
+                                <i class="hgi-stroke hgi-arrow-right-01 hgi-xs"></i>
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+
+            <!-- Trust Badges -->
+            <div style="text-align: center; margin-top: 60px; padding-top: 40px; border-top: 1px solid rgba(255,255,255,0.2);" class="reveal">
+                <p style="font-size: 12px; color: rgba(255,255,255,0.6); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 20px;">Trusted by leading automotive businesses across Africa</p>
+                <div style="display: flex; align-items: center; justify-content: center; gap: 32px; flex-wrap: wrap;">
+                    <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.8);">
+                        <i class="hgi-stroke hgi-shield-check hgi-sm" style="color: #10b981;"></i>
+                        <strong>SSO & 2FA Included</strong>
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.8);">
+                        <i class="hgi-stroke hgi-zap hgi-sm" style="color: #f59e0b;"></i>
+                        <strong>Instant Setup</strong>
+                    </span>
+                    <span style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: rgba(255,255,255,0.8);">
+                        <i class="hgi-stroke hgi-help-circle hgi-sm" style="color: #3b82f6;"></i>
+                        <strong>24/7 Support</strong>
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .pricing-card {
+                backdrop-filter: blur(10px);
+            }
+            .pricing-card:hover {
+                transform: translateY(-4px);
+            }
+            .pricing-btn:hover {
+                transform: translateY(-2px);
+            }
+        </style>
+    </section>
+
+    <!-- 18. ENHANCED RICH FOOTER -->
     <footer id="site-footer">
         <div class="footer__watermark" aria-hidden="true">Piiston</div>
         <div class="lp-container">

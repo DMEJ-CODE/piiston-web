@@ -37,4 +37,20 @@ class CartService
 
         return $cart->items()->where('id', $itemId)->delete();
     }
+
+    public function updateQuantity(int $itemId, int $quantity)
+    {
+        $cart = $this->getCart();
+        $item = $cart->items()->where('id', $itemId)->first();
+
+        if ($item) {
+            if ($quantity <= 0) {
+                $item->delete();
+            } else {
+                $item->update(['quantity' => $quantity]);
+            }
+        }
+
+        return $cart->load('items.listing.part');
+    }
 }

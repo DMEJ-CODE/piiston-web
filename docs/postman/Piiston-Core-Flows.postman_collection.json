@@ -1,0 +1,1620 @@
+{
+  "info": {
+    "name": "Piiston - Core Flows (Postman)",
+    "description": "Functional testing collection for Piiston.\n\nRUN ORDER: 1) Auth > Login  2) Catalog > Brands/Models  3) Add Vehicle > Add vehicle  4) Garage Search > Search + branch services  5) Book Service  6) Send Assistant Alert.\n\nToken and IDs are captured automatically via test scripts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://127.0.0.1:8000"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/auth/login}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "login"
+              ]
+            },
+            "description": "Returns access_token. Token is auto-saved to the {{token}} variable.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{login_email}}\",\n  \"password\": \"{{login_password}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Has access_token', function () { pm.expect(json.access_token).to.be.a('string'); });",
+                  "if (json.access_token) { pm.environment.set('token', json.access_token); }",
+                  "if (json.user && json.user.id) { pm.environment.set('user_id', json.user.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Register (VEHICLE_OWNER)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/auth/register}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "register"
+              ]
+            },
+            "description": "Role must be one of: VEHICLE_OWNER, GARAGE_OWNER, MECHANIC, SPARE_PART_SELLER, FLEET_MANAGER, ADMIN.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"first_name\": \"Postman\",\n  \"last_name\": \"Tester\",\n  \"email\": \"postman.tester@example.com\",\n  \"phone\": \"+237690000001\",\n  \"password\": \"password\",\n  \"password_confirmation\": \"password\",\n  \"country_id\": \"{{country_id}}\",\n  \"role\": \"VEHICLE_OWNER\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const json = pm.response.json();",
+                  "  pm.environment.set('token', json.access_token);",
+                  "} else { console.log('Register failed: ' + pm.response.text()); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Current User (me)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/auth/user}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "user"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Check Email Available",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/auth/check-email}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "check-email"
+              ]
+            },
+            "description": "422 = email already taken, 200 = available.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"newuser@example.com\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Check Phone Available",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/auth/check-phone}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "check-phone"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+237690000002\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Send OTP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/auth/send-otp}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "send-otp"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+237690000002\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Verify OTP (use 123456)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/auth/verify-otp}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "verify-otp"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"phone\": \"+237690000002\",\n  \"code\": \"123456\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/auth/logout}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "logout"
+              ]
+            },
+            "description": "Revokes the current token."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.set('token', '');"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2. Catalog (lookup data)",
+      "item": [
+        {
+          "name": "Brands",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/catalog/brands}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "brands"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Models for brand",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/catalog/brands/{{brand_id}}/models}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "brands",
+                "{{brand_id}}",
+                "models"
+              ]
+            },
+            "description": "Use this to fill model_id when adding a vehicle."
+          }
+        },
+        {
+          "name": "Fuel Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/catalog/fuel-types}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "fuel-types"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Transmissions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/catalog/transmissions}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "transmissions"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Countries",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/countries}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "countries"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Vehicle Brands (legacy)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicle-brands}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicle-brands"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Mechanic Skills",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/catalog/mechanic-skills}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "mechanic-skills"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Mechanic Types",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/catalog/mechanic-types}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "catalog",
+                "mechanic-types"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "3. Add Vehicle",
+      "item": [
+        {
+          "name": "List my vehicles",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicles}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Add vehicle",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicles}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles"
+              ]
+            },
+            "description": "Required: brand_id, model_id, year, license_plate, country_id, mileage. vin & photo optional. vin and license_plate must be UNIQUE. Expect 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"brand_id\": \"{{brand_id}}\",\n  \"model_id\": \"{{model_id}}\",\n  \"year\": 2022,\n  \"vin\": \"JTDBR32E830012345\",\n  \"license_plate\": \"{{license_plate}}\",\n  \"country_id\": \"{{country_id}}\",\n  \"mileage\": 45000,\n  \"color\": \"White\",\n  \"fuel_type_id\": \"{{fuel_type_id}}\",\n  \"transmission_id\": \"{{transmission_id}}\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "pm.test('Has vehicle id', function () { pm.expect(json.vehicle.id).to.exist; });",
+                  "if (json.vehicle) { pm.environment.set('vehicle_id', json.vehicle.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show vehicle",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicles/{{vehicle_id}}}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Update vehicle",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicles/{{vehicle_id}}}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            },
+            "description": "All fields optional (partial update). Keep your own license_plate unchanged - unique rule ignores the current vehicle.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"color\": \"Black\",\n  \"mileage\": 46000\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Update mileage",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicles/{{vehicle_id}}/mileage}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles",
+                "{{vehicle_id}}",
+                "mileage"
+              ]
+            },
+            "description": "Sets mileage and records a usage log + history entry.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"mileage\": 47500\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lookup by VIN",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicles/vin/JTDBR32E830012345}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles",
+                "vin",
+                "JTDBR32E830012345"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "List maintenances",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicles/{{vehicle_id}}/maintenances}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles",
+                "{{vehicle_id}}",
+                "maintenances"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Delete vehicle",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/vehicles/{{vehicle_id}}}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "vehicles",
+                "{{vehicle_id}}"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Garage Search",
+      "item": [
+        {
+          "name": "Search garages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/garages}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "garages"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "Toyota",
+                  "description": "Name/description contains"
+                },
+                {
+                  "key": "country_id",
+                  "value": "{{country_id}}",
+                  "description": ""
+                },
+                {
+                  "key": "status",
+                  "value": "1",
+                  "description": ""
+                },
+                {
+                  "key": "page",
+                  "value": "1",
+                  "description": ""
+                }
+              ]
+            },
+            "description": "Public (no auth). Filters: q, country_id, status, page. Paginated 15/page."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "if (json.data && json.data.length && json.data[0].id) { pm.environment.set('garage_id', json.data[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Search garages (minimal)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/garages}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "garages"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Show garage",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/garages/{{garage_id}}}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "garages",
+                "{{garage_id}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const d = json.data || json;",
+                  "if (d.branches && d.branches.length) { pm.environment.set('branch_id', d.branches[0].id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Nearby garages",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/garages/nearby}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "garages",
+                "nearby"
+              ],
+              "query": [
+                {
+                  "key": "lat",
+                  "value": "4.0511",
+                  "description": ""
+                },
+                {
+                  "key": "lng",
+                  "value": "9.7679",
+                  "description": ""
+                },
+                {
+                  "key": "radius",
+                  "value": "10",
+                  "description": "km"
+                }
+              ]
+            },
+            "description": "Required: lat, lng. Optional: radius (km, default 10)."
+          }
+        },
+        {
+          "name": "Services of a branch",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/branches/{{branch_id}}/services}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "branches",
+                "{{branch_id}}",
+                "services"
+              ]
+            },
+            "description": "Use this to fill service_id when booking."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "const d = json.data || json;",
+                  "if (d.length && d[0].id) { pm.environment.set('service_id', d[0].id); }"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Book Service (Appointment)",
+      "item": [
+        {
+          "name": "My appointments",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/appointments}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Book appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/appointments}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments"
+              ]
+            },
+            "description": "Required: vehicle_id (must be yours), service_id, scheduled_date. branch_id/garage_id optional - falls back to first branch. Expect 201.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_id\": \"{{vehicle_id}}\",\n  \"branch_id\": \"{{branch_id}}\",\n  \"garage_id\": \"{{garage_id}}\",\n  \"service_id\": \"{{service_id}}\",\n  \"scheduled_date\": \"2026-10-15\",\n  \"scheduled_time\": \"10:30\",\n  \"notes\": \"Engine making a strange noise.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "if (json.appointment && json.appointment.id) { pm.environment.set('appointment_id', json.appointment.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show appointment",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/appointments/{{appointment_id}}}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointment_id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Confirm appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/appointments/{{appointment_id}}/confirm}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointment_id}}",
+                "confirm"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Cancel appointment",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/appointments/{{appointment_id}}/cancel}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "appointments",
+                "{{appointment_id}}",
+                "cancel"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Send Assistant Alert (SOS)",
+      "item": [
+        {
+          "name": "My SOS requests",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Active SOS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/active}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "active"
+              ]
+            },
+            "description": "Returns the in-progress SOS or null."
+          }
+        },
+        {
+          "name": "Send assistant alert (SOS)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests"
+              ]
+            },
+            "description": "Required: vehicle_id (yours), location, latitude, longitude, radius_km. Expect 201. NOTE: only ONE active SOS per user - cancel the previous one (422 otherwise).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"vehicle_id\": \"{{vehicle_id}}\",\n  \"location\": \"Yaounde, Carrefour Bastos\",\n  \"latitude\": 3.895,\n  \"longitude\": 11.512,\n  \"radius_km\": 15,\n  \"problem_description\": \"Engine stopped, vehicle disabled on the road.\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "if (json.request && json.request.id) { pm.environment.set('emergency_id', json.request.id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Show SOS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Cancel SOS (use if you need to re-test)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/cancel}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "cancel"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Track SOS",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/tracking}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "tracking"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "Push tracking point",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/tracking}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "tracking"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitude\": 3.896,\n  \"longitude\": 11.513\n}"
+            }
+          }
+        },
+        {
+          "name": "[Mechanic] Accept SOS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/accept}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "accept"
+              ]
+            },
+            "description": "Call with a MECHANIC/garage token. Mechanic side of the flow.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"branch_id\": \"{{branch_id}}\",\n  \"mechanic_id\": \"{{user_id}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "[Mechanic] Submit service sheet",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/service-sheet}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "service-sheet"
+              ]
+            },
+            "description": "",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Battery + alternator\",\n  \"findings\": \"Dead battery, alternator failing\",\n  \"mileage\": 47500,\n  \"estimated_cost\": 45000,\n  \"parts_needed\": [\n    \"battery\"\n  ]\n}"
+            }
+          }
+        },
+        {
+          "name": "[Owner] Approve estimate",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/approve-estimate}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "approve-estimate"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "[Mechanic] Confirm arrival",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/arrive}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "arrive"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "[Mechanic] Complete SOS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/complete}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "complete"
+              ]
+            },
+            "description": ""
+          }
+        },
+        {
+          "name": "[Mechanic] Decline SOS",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{api/emergency-requests/{{emergency_id}}/decline}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "emergency-requests",
+                "{{emergency_id}}",
+                "decline"
+              ]
+            },
+            "description": ""
+          }
+        }
+      ]
+    }
+  ]
+}

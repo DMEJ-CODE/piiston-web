@@ -34,6 +34,22 @@ class AuthService
             if ($role) {
                 \Log::info('Found role. ID: '.$role->id);
                 $user->roles()->attach($role->id, ['assigned_at' => now(), 'status' => 'active']);
+
+                // Create profile based on role
+                if (strtoupper($data['role']) === 'SPARE_PART_SELLER') {
+                    $user->sellerProfile()->create([
+                        'country_id' => $user->country_id ?? 1, // Default to 1 if not set
+                        'business_name' => $user->getNameAttribute()."'s Store",
+                        'business_type' => 'PART_STORE',
+                        'status' => true,
+                    ]);
+                } elseif (strtoupper($data['role']) === 'MECHANIC') {
+                    $user->mechanicProfile()->create([
+                        'country_id' => $user->country_id ?? 1,
+                        'years_of_experience' => 0,
+                        'availability_status' => 'available',
+                    ]);
+                }
             } else {
                 \Log::warning('Role NOT found: '.$data['role']);
             }

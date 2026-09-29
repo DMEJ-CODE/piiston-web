@@ -9,14 +9,23 @@ class EloquentProductRepository implements ProductRepositoryInterface
 {
     public function findById(int $id): ?ProductListing
     {
-        return ProductListing::with(['part.category', 'part.brand', 'seller', 'currency', 'documents.mediaFile'])->find($id);
+        return ProductListing::with(['part.category', 'part.brand', 'seller', 'currency', 'documents.mediaFile'])
+            ->withCount(['likes', 'comments'])
+            ->withExists(['likes as is_liked' => function ($query) {
+                $query->where('user_id', auth()->id());
+            }])
+            ->find($id);
     }
 
     public function search(array $filters, int $perPage = 15): LengthAwarePaginator
     {
         $query = ProductListing::query()
             ->with(['part.category', 'part.brand', 'seller', 'currency', 'documents.mediaFile'])
-            ->where('status', true);
+            ->withCount(['likes', 'comments'])
+            ->withExists(['likes as is_liked' => function ($query) {
+                $query->where('user_id', auth()->id());
+            }])
+            ->whereIn('status', ['active', 1, 'ACTIVE', 'TRUE', true]);
 
         if (isset($filters['q'])) {
             $s = $filters['q'];

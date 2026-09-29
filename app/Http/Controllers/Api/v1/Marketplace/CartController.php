@@ -49,4 +49,18 @@ class CartController extends Controller
 
         return response()->json(['message' => 'Item removed from cart']);
     }
+
+    public function update(Request $request, int $itemId): JsonResponse
+    {
+        $request->validate([
+            'quantity' => 'required|integer|min:0',
+        ]);
+
+        $cart = $this->cartService->updateQuantity($itemId, $request->quantity);
+
+        return response()->json([
+            'message' => 'Cart updated',
+            'cart' => $cart,
+        ]);
+    }
 }

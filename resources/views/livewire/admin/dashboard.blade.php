@@ -9,16 +9,16 @@
             <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest pl-4">Piiston Central Controller • {{ now()->format('d M Y') }}</p>
         </div>
         <flux:button href="{{ route('admin.settings') }}" size="xs" class="btn-premium-secondary">
-            <i class="hgi-stroke hgi-settings-02 mr-2"></i> Configuration
+            <i class="hgi-stroke hgi-settings-02 mr-2"></i> Settings
         </flux:button>
     </div>
 
     <!-- Main Stats Grid -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <x-dashboard.stat-card title="Utilisateurs" :value="$totalUsers" icon="user-group" trend="+12%" color="#3B82F6" />
+        <x-dashboard.stat-card title="Users" :value="$totalUsers" icon="user-group" trend="+12%" color="#3B82F6" />
         <x-dashboard.stat-card title="Garages" :value="$totalGarages" icon="building-03" trend="+5%" color="#10B981" />
-        <x-dashboard.stat-card title="Parc Véhicule" :value="$totalVehicles" icon="truck" trend="+8%" color="#8B5CF6" />
-        <x-dashboard.stat-card title="Revenu Global" :value="number_format($totalRevenue, 0, ',', ' ') . ' F'" icon="banknotes" trend="+15%" color="#F59E0B" />
+        <x-dashboard.stat-card title="Vehicle Fleet" :value="$totalVehicles" icon="truck" trend="+8%" color="#8B5CF6" />
+        <x-dashboard.stat-card title="Global Revenue" :value="number_format($totalRevenue, 0, ',', ' ') . ' F'" icon="banknotes" trend="+15%" color="#F59E0B" />
     </div>
 
     <div class="grid grid-cols-12 gap-4">
@@ -29,10 +29,10 @@
             <div class="card-premium !p-4 relative overflow-hidden">
                 <div class="flex items-center justify-between mb-4 px-1">
                     <div class="flex flex-col gap-1">
-                        <h3 class="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">Journal Système</h3>
-                        <p class="text-[10px] text-zinc-400 font-bold uppercase">Derniers flux administratifs</p>
+                        <h3 class="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">System Log</h3>
+                        <p class="text-[10px] text-zinc-400 font-bold uppercase">Recent administrative activity</p>
                     </div>
-                    <a href="{{ route('admin.audit-logs') }}" class="px-4 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 hover:scale-[1.02] transition-all">Historique</a>
+                    <a href="{{ route('admin.audit-logs') }}" class="px-4 py-1.5 rounded-xl bg-blue-50 dark:bg-blue-900/20 text-[10px] font-black uppercase text-blue-600 dark:text-blue-400 hover:scale-[1.02] transition-all">History</a>
                 </div>
 
                 <div class="space-y-2">
@@ -58,7 +58,7 @@
                             </div>
                         </div>
                     @empty
-                        <div class="py-12 text-center label-premium">Aucune activité</div>
+                        <div class="py-12 text-center label-premium">No activity</div>
                     @endforelse
                 </div>
                 <!-- Background decoration -->
@@ -84,7 +84,7 @@
                     </div>
 
                     <div class="space-y-4">
-                        @foreach(['Charge CPU' => '24%', 'Mémoire RAM' => '52%', 'Réseau I/O' => '35%'] as $label => $val)
+                        @foreach(['CPU Load' => '24%', 'RAM Memory' => '52%', 'Network I/O' => '35%'] as $label => $val)
                         <div class="flex flex-col gap-2">
                             <div class="flex justify-between text-[11px] font-black uppercase text-white/60 tracking-widest">
                                 <span>{{ $label }}</span>

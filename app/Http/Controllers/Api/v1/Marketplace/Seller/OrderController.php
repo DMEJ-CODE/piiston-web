@@ -4,12 +4,20 @@ namespace App\Http\Controllers\Api\v1\Marketplace\Seller;
 
 use App\Http\Controllers\Controller;
 use App\Models\Marketplace\Order;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class OrderController extends Controller
 {
+    protected $notificationService;
+
+    public function __construct(NotificationService $notificationService)
+    {
+        $this->notificationService = $notificationService;
+    }
+
     public function index(): JsonResponse
     {
         $seller = Auth::user()->sellerProfile;
@@ -53,6 +61,15 @@ class OrderController extends Controller
         ]);
 
         $order->update(['order_status' => $data['order_status']]);
+
+        // Notify Buyer
+        $this->notificationService->send(
+            $order->buyer,
+            'ORDER_STATUS_UPDATED',
+            'Mise à jour de commande',
+            "Le statut de votre commande #{$order->id} est désormais : {$data['order_status']}.",
+            ['reference_type' => 'Order', 'reference_id' => $order->id, 'category' => 'Marketplace']
+        );
 
         // Auto-create delivery if confirmed
         if ($data['order_status'] === 'CONFIRMED' && ! $order->delivery) {

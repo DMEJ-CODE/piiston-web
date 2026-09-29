@@ -6,8 +6,8 @@
             <i class="hgi-stroke hgi-shield-01 text-white text-lg"></i>
         </div>
         <div>
-            <h1 class="text-[11px] font-black uppercase tracking-tight text-zinc-900 dark:text-white">Centrale de Contrôle</h1>
-            <p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest leading-none">Administration Système</p>
+            <h1 class="text-[11px] font-black uppercase tracking-tight text-zinc-900 dark:text-white">Control Center</h1>
+            <p class="text-[9px] font-bold text-blue-600 uppercase tracking-widest leading-none">System Administration</p>
         </div>
     </div>
 
@@ -17,7 +17,7 @@
         <!-- Command Search -->
         <button type="button" class="hidden xl:flex items-center gap-3 px-4 py-2 bg-zinc-100/50 dark:bg-white/5 border border-zinc-200/50 dark:border-white/5 rounded-2xl group transition-all hover:border-blue-500/50 hover:bg-white dark:hover:bg-zinc-800">
             <i class="hgi-stroke hgi-search-01 text-lg text-zinc-400 group-hover:text-blue-500 transition-colors"></i>
-            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-600">Recherche globale...</span>
+            <span class="text-[11px] font-bold text-zinc-400 group-hover:text-zinc-600">Global search...</span>
             <div class="flex items-center gap-1 ml-6">
                 <span class="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-white/10 text-[9px] font-black text-zinc-500">⌘</span>
                 <span class="px-1.5 py-0.5 rounded bg-zinc-200 dark:bg-white/10 text-[9px] font-black text-zinc-500">K</span>

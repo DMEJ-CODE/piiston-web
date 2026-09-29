@@ -18,28 +18,41 @@ use App\Http\Controllers\Web\GarageSettingsController;
 use App\Http\Controllers\Web\GarageWarrantyClaimController;
 use App\Http\Controllers\Web\RepairController;
 use App\Http\Controllers\Web\SearchController;
+use App\Http\Controllers\Web\SubscriptionController;
 use App\Http\Controllers\Web\WorkshopBayController;
 use App\Http\Middleware\ResolveGarageBranch;
 use App\Livewire\Auth\Onboarding;
 use App\Livewire\Garage\Setup;
+use App\Livewire\Messaging\ChatCenter;
 use App\Models\Garages\GarageBranch;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'welcome')->name('home');
+Route::get('/pricing', [SubscriptionController::class, 'publicIndex'])->name('pricing.index');
+Route::get('/pricing/{plan}', [SubscriptionController::class, 'publicShow'])->name('pricing.show');
 
 Route::get('/cookie-policy', [LandingController::class, 'cookiePolicy'])->name('cookie.policy');
 Route::post('/cookie-consent', [LandingController::class, 'setConsent'])->name('cookie.consent');
 
 Route::post('/contact', [LandingController::class, 'submitContact'])->name('contact.submit');
 Route::post('/newsletter/subscribe', [LandingController::class, 'subscribeNewsletter'])->name('newsletter.subscribe');
+Route::get('/garage/subscriptions/notchpay/callback', [GarageSettingsController::class, 'callback'])->name('garage.subscriptions.notchpay.callback');
+Route::get('/subscriptions/notchpay/callback', [SubscriptionController::class, 'callback'])->name('subscriptions.notchpay.callback');
+Route::view('/payment/success', 'payments.success')->name('payment.success');
+Route::view('/payment/failed', 'payments.failed')->name('payment.failed');
+Route::view('/payment/canceled', 'payments.canceled')->name('payment.canceled');
 
 // Public Estimates Access
 Route::get('/estimate/{token}', [PublicEstimateController::class, 'show'])->name('public.estimate.show');
 Route::post('/estimate/{token}/approve', [PublicEstimateController::class, 'approve'])->name('public.estimate.approve');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/garage/messages/{conversationId?}', ChatCenter::class)->name('garage.messages.index');
+    Route::post('/pricing/{plan}/checkout', [SubscriptionController::class, 'publicCheckout'])->name('pricing.checkout');
     Route::get('/onboarding', Onboarding::class)->name('onboarding');
+    Route::get('/subscriptions', [SubscriptionController::class, 'index'])->name('subscriptions.index');
+    Route::post('/subscriptions/checkout', [SubscriptionController::class, 'checkout'])->name('subscriptions.checkout');
 
     Route::middleware(['onboarding'])->group(function () {
         Route::get('dashboard', function () {
@@ -86,10 +99,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/branches', [BranchController::class, 'store'])->name('branches.store');
             Route::get('/branches/{targetBranch}/edit', [BranchController::class, 'edit'])->name('branches.edit');
             Route::put('/branches/{targetBranch}', [BranchController::class, 'update'])->name('branches.update');
-            Route::get('/reports', [GarageController::class, 'reports'])->name('reports.index');
-            Route::get('/reports/advanced', [GarageController::class, 'advancedReports'])->name('reports.advanced');
+            Route::get('/reports', [GarageController::class, 'reports'])->middleware('subscription.feature:reports')->name('reports.index');
+            Route::get('/reports/advanced', [GarageController::class, 'advancedReports'])->middleware('subscription.feature:reports')->name('reports.advanced');
             Route::get('/settings', [GarageSettingsController::class, 'index'])->name('settings.index');
             Route::patch('/settings', [GarageSettingsController::class, 'update'])->name('settings.update');
+            Route::patch('/settings/location', [GarageSettingsController::class, 'updateLocation'])->name('settings.update-location');
+            Route::post('/settings/subscription/checkout', [GarageSettingsController::class, 'checkout'])->name('settings.subscription.checkout');
             Route::get('/search', [SearchController::class, 'global'])->name('search');
             Route::get('/notifications', function () {
                 return view('garage.notifications.index', [
@@ -134,12 +149,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::put('/customers/{customer}', [GarageController::class, 'updateCustomer'])->name('customers.update');
             Route::delete('/customers/{customer}', [GarageController::class, 'destroyCustomer'])->name('customers.destroy');
 
-            Route::get('/appointments', [GarageController::class, 'appointments'])->name('appointments.index');
+            Route::get('/appointments', [GarageController::class, 'appointments'])->middleware('subscription.feature:appointments')->name('appointments.index');
             Route::get('/appointments/calendar', function () {
                 return view('garage.appointments.calendar', ['branch' => request()->attributes->get('garageBranch')]);
-            })->name('appointments.calendar');
-            Route::get('/appointments/create', [GarageController::class, 'createAppointment'])->name('appointments.create');
-            Route::post('/appointments', [GarageController::class, 'storeAppointment'])->name('appointments.store');
+            })->middleware('subscription.feature:appointments')->name('appointments.calendar');
+            Route::get('/appointments/create', [GarageController::class, 'createAppointment'])->middleware('subscription.feature:appointments')->name('appointments.create');
+            Route::post('/appointments', [GarageController::class, 'storeAppointment'])->middleware('subscription.feature:appointments')->name('appointments.store');
             Route::get('/appointments/{appointment}/edit', [GarageController::class, 'editAppointment'])->name('appointments.edit');
             Route::put('/appointments/{appointment}', [GarageController::class, 'updateAppointment'])->name('appointments.update');
             Route::delete('/appointments/{appointment}', [GarageController::class, 'destroyAppointment'])->name('appointments.destroy');
@@ -159,12 +174,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
             Route::post('/repairs/{repair}/delivery', [DeliveryController::class, 'store'])->name('repairs.delivery.store');
             Route::post('/estimates/{estimate}/share', [PublicEstimateController::class, 'generateToken'])->name('estimates.share');
 
-            Route::get('/inventory', [GarageController::class, 'inventory'])->name('inventory.index');
-            Route::get('/inventory/create', [GarageController::class, 'createInventory'])->name('inventory.create');
-            Route::post('/inventory', [GarageController::class, 'storeInventory'])->name('inventory.store');
+            Route::get('/inventory', [GarageController::class, 'inventory'])->middleware('subscription.feature:inventory')->name('inventory.index');
+            Route::get('/inventory/create', [GarageController::class, 'createInventory'])->middleware('subscription.feature:inventory')->name('inventory.create');
+            Route::post('/inventory', [GarageController::class, 'storeInventory'])->middleware('subscription.feature:inventory')->name('inventory.store');
             Route::get('/inventory/{part}/edit', [GarageController::class, 'editInventory'])->name('inventory.edit');
             Route::put('/inventory/{part}', [GarageController::class, 'updateInventory'])->name('inventory.update');
             Route::delete('/inventory/{part}', [GarageController::class, 'destroyInventory'])->name('inventory.destroy');
+
+            // Marketplace for Garage to buy parts
+            Route::get('/marketplace', function () {
+                return view('garage.marketplace.index');
+            })->middleware('subscription.feature:marketplace')->name('marketplace.index');
 
             Route::get('/employees', [GarageEmployeeController::class, 'index'])->name('employees.index');
             Route::get('/employees/create', [GarageEmployeeController::class, 'create'])->name('employees.create');
@@ -175,6 +195,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
             Route::get('/services', [GarageServiceController::class, 'index'])->name('services.index');
             Route::post('/services', [GarageServiceController::class, 'store'])->name('services.store');
+            Route::put('/services/{service}', [GarageServiceController::class, 'update'])->name('services.update');
+            Route::delete('/services/{service}', [GarageServiceController::class, 'destroy'])->name('services.destroy');
 
             Route::get('/bays', [WorkshopBayController::class, 'index'])->name('bays.index');
             Route::post('/bays', [WorkshopBayController::class, 'store'])->name('bays.store');

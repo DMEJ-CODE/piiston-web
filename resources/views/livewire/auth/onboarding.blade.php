@@ -11,7 +11,7 @@
     @if($step == 1)
         <div class="flex flex-col gap-5">
             <div class="auth-input-group">
-                <label class="auth-label">{{ __('Country') }}</label>
+                <label class="auth-label">{{ __('auth.Country') }}</label>
                 <div class="relative" x-data="{ open: false }">
                     <button @click="open = !open" type="button" class="w-full flex items-center gap-3 p-3.5 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl text-left hover:border-[var(--accent-active2)] transition-all">
                         <span class="text-xl">{{ $country_flag }}</span>
@@ -19,7 +19,7 @@
                             {{ collect($countries)->firstWhere('code', $country_code)['name'] }}
                         </span>
                         <span class="text-xs font-bold text-[var(--text-muted)]">{{ $country_code }}</span>
-                        <svg class="icon-svg icon-svg--sm text-[var(--text-muted)]" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></svg>
+                        <i class="hgi hgi-arrow-down-01 hgi-sm text-[var(--text-subtle)]"></i>
                     </button>
 
                     <div x-show="open" @click.away="open = false" class="absolute z-50 w-full mt-2 bg-[var(--bg-glass)] backdrop-blur-xl border border-[var(--border-color)] rounded-2xl shadow-xl overflow-hidden py-1">
@@ -35,9 +35,9 @@
             </div>
 
             <div class="auth-input-group">
-                <label for="phone" class="auth-label">{{ __('Phone Number') }}</label>
+                <label for="phone" class="auth-label">{{ __('auth.Phone Number') }}</label>
                 <div class="auth-input-wrap">
-                    <svg class="icon-svg auth-input-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                    <i class="hgi hgi-call auth-input-icon"></i>
                     <input id="phone" name="phone" type="tel" value="{{ old('phone', $phone) }}" required placeholder="677 000 000" class="auth-input" wire:model.defer="phone">
                 </div>
                 @error('phone')
@@ -46,16 +46,16 @@
             </div>
 
             <button type="button" wire:click="sendOtp" class="lp-btn lp-btn--primary lp-btn--lg w-full mt-2">
-                <span>{{ __('Send Verification Code') }}</span>
+                <span>{{ __('auth.Send Verification Code') }}</span>
             </button>
         </div>
 
     @elseif($step == 2)
         <div class="flex flex-col gap-6">
-            <label class="text-[13px] font-bold text-zinc-500 text-center uppercase tracking-wide">{{ __('Verification Code') }}</label>
+            <label class="text-[13px] font-bold text-zinc-500 text-center uppercase tracking-wide">{{ __('auth.Verification Code') }}</label>
             <div class="flex justify-center">
                 <div class="flex gap-2" x-data="{
-                    digits: @json(str_split($otp ?? '')),
+                    digits: {{ json_encode(str_split($otp ?? '')) }},
                     get otp() { return this.digits.join(''); },
                     set otp(val) { this.digits = val.split(''); },
                     focusNext(el) {
@@ -108,11 +108,11 @@
             @endif
 
             <button type="button" wire:click="verifyOtp" class="lp-btn lp-btn--primary lp-btn--lg w-full mt-2">
-                <span>{{ __('Verify & Continue') }}</span>
+                <span>{{ __('auth.Verify & Continue') }}</span>
             </button>
 
             <button type="button" wire:click="$set('step', 1)" class="text-xs font-bold text-[var(--accent-active2)] hover:underline text-center">
-                {{ __('Change Number') }}
+                {{ __('auth.Change Number') }}
             </button>
         </div>
 
@@ -128,8 +128,7 @@
                             : 'bg-[var(--bg-tertiary)] border-transparent hover:bg-[var(--bg-card-hover)] hover:border-[var(--border-color)]' }}"
                 >
                     <div class="p-3 rounded-2xl {{ $selectedRole === $role['id'] ? 'bg-[var(--accent-active)]/10 text-[var(--accent-active)]' : 'bg-[var(--bg-primary)] text-[var(--text-muted)]' }}">
-                        <svg class="icon-svg size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            @if($role['icon'] == 'wrench-screwdriver')
+                        <i class="hgi hgi-circle size-5 text-slate-300"></i>@if($role['icon'] == 'wrench-screwdriver')
                                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                             @elseif($role['icon'] == 'truck')
                                 <path d="M10 17h4V5H2v12h3"/><path d="M20 17h2v-3.34a4 4 0 0 0-1.17-2.83L19 9h-5v8h1"/><circle cx="7.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="17.5" r="2.5"/>
@@ -150,14 +149,14 @@
 
                     @if($selectedRole === $role['id'])
                         <div class="text-[var(--accent-active)]">
-                            <svg class="icon-svg size-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                            <i class="hgi hgi-checkmark-circle-02 size-5 text-emerald-500"></i>
                         </div>
                     @endif
                 </button>
             @endforeach
 
             <button type="button" wire:click="finish" class="lp-btn lp-btn--primary lp-btn--lg w-full mt-6" @disabled(!$selectedRole)">
-                <span>{{ __('Finish Setup') }}</span>
+                <span>{{ __('auth.Finish Setup') }}</span>
             </button>
         </div>
     @endif

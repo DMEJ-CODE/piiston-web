@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Modifier le devis')">
+<x-layouts::app :title="__('garage.Modifier le devis')">
     <flux:heading size="xl">Modifier le devis</flux:heading>
     <flux:text class="mt-2">Modifier le devis #{{ $estimate->id }}.</flux:text>
 

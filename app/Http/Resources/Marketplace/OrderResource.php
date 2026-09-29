@@ -12,6 +12,7 @@ class OrderResource extends JsonResource
     {
         return [
             'id' => $this->id,
+            'garage_branch_id' => $this->garage_branch_id,
             'total_amount' => $this->total_amount,
             'currency' => $this->currency->code ?? null,
             'payment_status' => $this->payment_status,

@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Inviter un collaborateur')">
+<x-layouts::app :title="__('garage.Inviter un collaborateur')">
     <div class="max-w-2xl mx-auto py-6">
         <flux:heading size="xl" class="font-black uppercase tracking-tight">Inviter un collaborateur</flux:heading>
         <flux:text class="text-[10px] font-bold uppercase tracking-widest text-zinc-500">Un lien sera envoyé par email pour rejoindre l'équipe.</flux:text>

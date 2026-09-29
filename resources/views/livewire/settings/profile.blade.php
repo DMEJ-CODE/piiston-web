@@ -1,14 +1,14 @@
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Paramètres du profil') }}</flux:heading>
+    <flux:heading class="sr-only">{{ __('settings.Profile settings') }}</flux:heading>
 
-    <x-settings.layout :heading="__('Informations Personnelles')" :subheading="__('Mettez à jour vos identifiants et avatar')">
+    <x-settings.layout :heading="__('settings.Personal information')" :subheading="__('settings.Update your details and avatar')">
         <form wire:submit="updateProfileInformation" class="space-y-10">
             <!-- Form Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-10">
                 <flux:field>
-                    <flux:label class="text-[10px] font-black uppercase tracking-[2px] text-slate-400 mb-2 pl-1">{{ __('Nom complet') }}</flux:label>
+                    <flux:label class="text-[10px] font-black uppercase tracking-[2px] text-slate-400 mb-2 pl-1">{{ __('settings.Full name') }}</flux:label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i class="hgi-stroke hgi-user text-sm text-slate-400 group-focus-within:text-[var(--active-2)] transition-colors"></i>
@@ -20,7 +20,7 @@
                 </flux:field>
 
                 <flux:field>
-                    <flux:label class="text-[10px] font-black uppercase tracking-[2px] text-slate-400 mb-2 pl-1">{{ __('Adresse Email') }}</flux:label>
+                    <flux:label class="text-[10px] font-black uppercase tracking-[2px] text-slate-400 mb-2 pl-1">{{ __('settings.Email address') }}</flux:label>
                     <div class="relative group">
                         <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                             <i class="hgi-stroke hgi-mail-01 text-sm text-slate-400 group-focus-within:text-[var(--active-2)] transition-colors"></i>
@@ -38,20 +38,20 @@
                         <i class="hgi-stroke hgi-alert-01 text-xl"></i>
                     </div>
                     <div class="flex-1">
-                        <h4 class="text-xs font-black text-amber-700 uppercase tracking-tight">{{ __('Email non vérifié') }}</h4>
+                        <h4 class="text-xs font-black text-amber-700 uppercase tracking-tight">{{ __('settings.Your email address is unverified.') }}</h4>
                         <p class="text-[10px] font-bold text-amber-600/80 uppercase mt-0.5 leading-relaxed">
-                            {{ __('Veuillez confirmer votre adresse pour sécuriser votre compte.') }}
+                            {{ __('settings.Please confirm your address to secure your account.') }}
                         </p>
                     </div>
                     <flux:button variant="ghost" size="sm" class="rounded-xl font-black text-[9px] uppercase border border-amber-500/20 text-amber-700" wire:click.prevent="resendVerificationNotification">
-                        {{ __('Renvoyer') }}
+                        {{ __('settings.Resend') }}
                     </flux:button>
                 </div>
             @endif
 
             <div class="flex justify-end pt-4">
                 <flux:button variant="primary" type="submit" class="rounded-2xl font-black uppercase text-[10px] bg-gradient-to-br from-[var(--active-2)] to-[var(--active)] border-none shadow-lg px-10 py-3.5 hover:scale-[1.02] active:scale-95 transition-all">
-                    {{ __('Mettre à jour mon profil') }}
+                    {{ __('settings.Update my profile') }}
                 </flux:button>
             </div>
         </form>

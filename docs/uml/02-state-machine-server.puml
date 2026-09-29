@@ -1,0 +1,830 @@
+@startuml
+' ============================================================================
+' Piiston - State Machine Diagrams (SERVER-SIDE)
+' Laravel 13: app/Services/**, app/Http/Controllers/**
+' Solid states = written by real code. Dotted/red = declared but NO writer found.
+' ============================================================================
+
+title Piiston — Server State Machines (Repair / SOS / Marketplace / Finance)
+
+' ----------------------------------------------------------------------------
+' A. REPAIR ORDER — the central work-order machine
+'    Model: App\Models\Garages\RepairOrder (table repair_orders)
+'    State field: status (string). 12 model constants.
+'    Writers: RepairService, Web\RepairController, Web\DiagnosisController,
+'             Web\EstimateController, Web\DeliveryController
+' ----------------------------------------------------------------------------
+
+state "RepairOrder" as RO <<sdlReceive>> {
+
+  [*] --> OPEN
+
+  state OPEN : status='OPEN'
+  note right of OPEN
+    DB column default 'OPEN'
+    (migration 2026_08_05_300003:50)
+    NO model constant covers it.
+    DEAD-END: no code path reaches it.
+  end note
+
+  state REQUESTED : status=REQUESTED
+  state DIAGNOSIS : status=DIAGNOSIS
+  state QUOTE_CREATED : status=QUOTE_CREATED
+  state WAITING_APPROVAL : WAITING_APPROVAL
+  state APPROVED : status=APPROVED
+  state SCHEDULED : SCHEDULED
+  state IN_PROGRESS : status=IN_PROGRESS
+  state WAITING_PARTS : WAITING_PARTS
+  state QUALITY_CHECK : QUALITY_CHECK
+  state COMPLETED : status=COMPLETED
+  state DELIVERED : status=DELIVERED
+  state CLOSED : CLOSED
+
+  state ESTIMATE_PENDING : status=ESTIMATE_PENDING
+  state ESTIMATE_APPROVED : status=ESTIMATE_APPROVED
+
+  ' --- creation (3 entry points) ---
+  OPEN --> REQUESTED : createRepairOrder()\nRepairService:35\n[POST /repairs]
+  OPEN --> REQUESTED : Web\RepairController::store():87\n[Gate operate on branch]
+  OPEN --> REQUESTED : ReceptionService::completeReception():49\n[seeds status_history]
+
+  ' --- diagnosis ---
+  REQUESTED --> DIAGNOSIS : submitDiagnosis()\nRepairService:52\n[Gate update, DB::transaction,\n upsert VehicleDiagnosis]
+  REQUESTED --> DIAGNOSIS : Web\DiagnosisController::store():85\n[severity in low/medium/\n high/critical]
+
+  ' --- estimate (TWO divergent spellings) ---
+  DIAGNOSIS --> QUOTE_CREATED : submitEstimate()\nRepairService:67\n[RepairEstimate -> 'DRAFT',\n notify REPAIR_ESTIMATE_READY]
+  DIAGNOSIS --> ESTIMATE_PENDING : Web\EstimateController::store():80\n[+ estimated_cost]\n<color:#b00>NON-CONSTANT VALUE</color>
+
+  ' --- approval ---
+  QUOTE_CREATED --> APPROVED : approveEstimate()\nRepairService:88\n[Gate approve,\n estimate.status=APPROVED]
+  ESTIMATE_PENDING --> APPROVED : RepairService::approveEstimate()
+  ESTIMATE_PENDING --> ESTIMATE_APPROVED : Web\EstimateController::approve():143\n<color:#b00>NON-CONSTANT VALUE</color>
+
+  ' --- generic status write (BYPASS) ---
+  state ANY as ANYSTATE
+  ANYSTATE --> ANYSTATE : Web\RepairController::updateStatus():124\nwhitelist REQUESTED,IN_PROGRESS,DIAGNOSIS,\nWAITING_PARTS,ESTIMATE_PENDING,\nESTIMATE_APPROVED,COMPLETED,DELIVERED\n<color:#b00>NO SIDE EFFECTS, NO STATE GUARD</color>
+  ANYSTATE --> ANYSTATE : RepairService::updateStatus():101\n<color:#b00>FREE-FORM string, only logs progress</color>
+
+  ' --- execution ---
+  APPROVED --> IN_PROGRESS : (via updateStatus / update)
+  APPROVED --> COMPLETED : completeRepair()\nRepairService:140\n[closed_at=now,\n notify REPAIR_COMPLETED,\n auto VehicleMaintenance]
+  APPROVED --> QUALITY_CHECK : performQualityCheck()\nRepairService:209
+  IN_PROGRESS --> QUALITY_CHECK : performQualityCheck()
+
+  ' --- quality check fork on result ---
+  QUALITY_CHECK --> COMPLETED : performQualityCheck()\n<color:#080>GUARD: result == 'PASS'</color>
+  QUALITY_CHECK --> IN_PROGRESS : performQualityCheck()\n<color:#b00>GUARD: result != 'PASS' (rework loop)</color>
+
+  COMPLETED --> DELIVERED : Web\DeliveryController::store():57\n[closed_at=now,\n creates VehicleDelivery,\n GUARD: mileage_at_delivery >=\n checkIn.mileage]
+
+  ' --- UNREACHABLE declared states ---
+  REQUESTED --> SCHEDULED : <color:#b00>[NO WRITER]</color>
+  REQUESTED --> WAITING_PARTS : <color:#b00>reachable ONLY via the unguarded updateStatus whitelist</color>
+  APPROVED --> WAITING_APPROVAL : <color:#b00>[NO WRITER]</color>
+  COMPLETED --> CLOSED : <color:#b00>[NO WRITER]</color>
+
+  DELIVERED --> [*]
+
+  note bottom of DELIVERED
+    DELIVERED is the WARRANTY ANCHOR:
+    WarrantyService::checkWarrantyCoverage()
+      where status = DELIVERED
+      and closed_at > now()-6 months
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' B. REPAIR ESTIMATE (child machine, own status field)
+'    Model: App\Models\Garages\RepairEstimate
+' ----------------------------------------------------------------------------
+
+state "RepairEstimate" as RE <<sdlReceive>> {
+  [*] --> DRAFT : submitEstimate()\nRepairService:64\n<color:#b00>'DRAFT' NOT in the\n declared whitelist</color>
+  [*] --> PENDING : Web\EstimateController::store():77\n[valid_until after:today]
+
+  state DRAFT : status='DRAFT'
+  state PENDING : status='PENDING'
+  state APPROVED : status='APPROVED'
+  state REJECTED : status='REJECTED'
+  state EXPIRED : EXPIRED
+
+  DRAFT --> APPROVED : RepairService::approveEstimate():90
+  PENDING --> APPROVED : Web\EstimateController::approve():141\n[Gate manageBranch]
+  DRAFT --> REJECTED : <color:#b00>[NO WRITER]</color>
+  PENDING --> REJECTED : Web\EstimateController::reject():154\n<color:#b00>BUG: does NOT roll back\n RepairOrder.status</color>
+  PENDING --> EXPIRED : <color:#b00>[NO WRITER]</color>
+  APPROVED --> [*]
+  REJECTED --> [*]
+  EXPIRED --> [*]
+
+  note right of RE
+    Declared domain (EstimateController:116):
+    PENDING, APPROVED, REJECTED, EXPIRED
+    Hard delete on destroy() (line 130).
+    public_token / token_expires_at
+    (guest approval link) are NEVER generated.
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' C. REPAIR TASK (per-task approval)
+'    Model: App\Models\Garages\RepairTask
+' ----------------------------------------------------------------------------
+
+state "RepairTask" as RT <<sdlReceive>> {
+  [*] --> pending : addTask()\nRepairService:109\n<color:#b00>lowercase 'pending'</color>
+  state pending
+  state APPROVED
+  state REJECTED
+  state in_progress
+  state done
+
+  pending --> APPROVED : RepairWorkflowController::approveTask():81\n[Gate approve on parent repair]
+  pending --> REJECTED : RepairWorkflowController::rejectTask():92
+  pending --> in_progress : <color:#b00>[NO WRITER]</color>
+  in_progress --> done : <color:#b00>[NO WRITER]</color>
+  APPROVED --> [*]
+  REJECTED --> [*]
+}
+
+' ----------------------------------------------------------------------------
+' D. GARAGE APPOINTMENT (booking negotiation)
+'    Model: App\Models\Garages\GarageAppointment
+' ----------------------------------------------------------------------------
+
+state "GarageAppointment" as GA <<sdlReceive>> {
+  [*] --> REQUESTED : AppointmentController::store():109\n[403 if vehicle.owner_id != me;\n GarageCustomer::firstOrCreate]
+  [*] --> REQUESTED : AppointmentService::createAppointment():13\n[Gate manageBranch]
+
+  state REQUESTED : STATUS_REQUESTED
+  state PROPOSED : STATUS_PROPOSED
+  state CONFIRMED : STATUS_CONFIRMED
+  state CANCELLED : STATUS_CANCELLED
+  state SCHEDULED : SCHEDULED
+
+  REQUESTED --> PROPOSED : Garage\AppointmentController::repropose():93\n{scheduled_date: date_format:Y-m-d H:i:s,\n proposed_by_id = me}  <-- GARAGE counter-offer
+  REQUESTED --> CONFIRMED : AppointmentController::confirm():171  <-- OWNER accepts
+  REQUESTED --> CONFIRMED : AppointmentService::confirmAppointment():33  <-- GARAGE confirms
+  PROPOSED --> CONFIRMED : (either side)
+  CONFIRMED --> SCHEDULED : <color:#b00>[READ ONLY, never written]</color>
+  CONFIRMED --> CANCELLED : AppointmentController::cancel():193\nAppointmentService::cancelAppointment():28
+  REQUESTED --> CANCELLED : Garage\AppointmentController::destroy():112
+  PROPOSED --> CANCELLED : (any)
+  CANCELLED --> [*]
+  SCHEDULED --> [*]
+
+  note bottom of REQUESTED
+    SLOT-BLOCKING BUG:
+    AppointmentService::getAvailableSlots():43
+    blocks only [CONFIRMED, SCHEDULED]
+    -> REQUESTED / PROPOSED double-book.
+  end note
+  note bottom of CONFIRMED
+    Downstream chain:
+    ServiceRequest -> Appointment -> VehicleCheckIn -> RepairOrder
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' E. VEHICLE CHECK-IN (garage reception)
+'    Model: App\Models\Garages\VehicleCheckIn
+' ----------------------------------------------------------------------------
+
+state "VehicleCheckIn" as VCI <<sdlReceive>> {
+  [*] --> RECEIVED : ReceptionService::completeReception():32\n[signature written to disk first]
+  [*] --> SCHEDULED : AppointmentController::store():114\nVehicleCheckIn::firstOrCreate
+  state WAITING : status='WAITING'
+  note right of WAITING
+    DB default 'WAITING'.
+    <color:#b00>NO WRITER — unreachable.</color>
+  end note
+  state RECEIVED
+  state SCHEDULED
+  RECEIVED --> [*]
+  SCHEDULED --> [*]
+}
+
+' ----------------------------------------------------------------------------
+' F. SERVICE REQUEST (owner intent, orphaned machine)
+'    Model: App\Models\Workflows\ServiceRequest
+' ----------------------------------------------------------------------------
+
+state "ServiceRequest" as SR <<sdlReceive>> {
+  [*] --> PENDING : RepairService::createRequest():29\n[ONLY writer in the codebase]
+  state PENDING : status='PENDING' (default)\nrequest_type: REPAIR, MAINTENANCE,\nDIAGNOSIS, EMERGENCY\npriority: normal
+  PENDING --> [*]
+  note right of PENDING
+    <color:#b00>NO transition code at all.</color>
+    No accept / assign / close endpoint.
+    Yet it owns hasOneThrough()
+    -> RepairOrder (via Appointment).
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' G. EMERGENCY REQUEST (SOS) — server side, full guards
+'    Model: App\Models\Workflows\EmergencyRequest
+'    Writer: Api\v1\EmergencyRequestController (string literals only)
+' ----------------------------------------------------------------------------
+
+state "EmergencyRequest (SOS)" as SOS <<sdlReceive>> {
+  [*] --> REQUESTED : store():135
+  state REQUESTED
+  state ASSIGNED : ASSIGNED
+  state ACCEPTED
+  state IN_PROGRESS : IN_PROGRESS
+  state ARRIVED
+  state ESTIMATE_PENDING
+  state COMPLETED
+  state CANCELLED
+
+  note right of REQUESTED {
+    GUARDS on store():
+    * 422 if an existing SOS for this user
+      has status in
+      [REQUESTED, ASSIGNED, IN_PROGRESS, ACCEPTED]
+      (exclusivity)
+    * 403 if vehicle.owner_id != Auth::id()
+    SIDE EFFECT: broadcast NEW_SOS_ALERT to
+    all users holding the MECHANIC role
+  }
+
+  REQUESTED --> ACCEPTED : accept():179
+  note on REQUESTED
+    accept() GUARD: status != REQUESTED -> 400
+    sets branch_id (required)
+    + assigned_mechanic_id ?? Auth::id()
+    notifies owner SOS_ACCEPTED
+  end note
+
+  ACCEPTED --> ARRIVED : arrive():209
+  note on ACCEPTED
+    arrive() GUARD:
+      assigned_mechanic_id != user.id -> 403
+    SIDE EFFECT: ends all TrackingSession
+      active -> completed
+  end note
+
+  ACCEPTED --> ESTIMATE_PENDING : submitServiceSheet():304
+  ARRIVED --> ESTIMATE_PENDING : submitServiceSheet():304
+  note on ESTIMATE_PENDING
+    assigned-mechanic-only -> 403
+    persists service_sheet (json)
+    + estimated_cost
+  end note
+
+  ESTIMATE_PENDING --> ACCEPTED : approveEstimate():343
+  note on ESTIMATE_PENDING
+    DELIBERATE RE-ENTRY LOOP.
+    GUARDS: user_id != Auth::id() -> 403
+            status != ESTIMATE_PENDING -> 400
+    Comment: "Move to accepted/in_progress again"
+  end note
+
+  ACCEPTED --> IN_PROGRESS : <color:#b00>[NO WRITER]</color>
+  REQUESTED --> ASSIGNED : <color:#b00>[NO WRITER]</color>
+  ARRIVED --> IN_PROGRESS : <color:#b00>[NO WRITER]</color>
+
+  state ANY as SOSANY
+  SOSANY --> COMPLETED : complete():252
+  note on SOSANY
+    complete() GUARD:
+      assigned mechanic OR branch.manager_id == user.id
+      else 403.
+    sets paid_at.
+    auto-creates VehicleMaintenance
+    ('status' => 'COMPLETED')
+  end note
+
+  SOSANY --> REQUESTED : decline():378  <-- ROLLBACK
+  note on SOSANY
+    decline() GUARDS:
+      must be assigned mechanic or branch manager
+      AND status NOT IN [COMPLETED, ARRIVED] -> 400
+    nulls assigned_mechanic_id + branch_id
+    cancels the mechanic's TrackingSession
+      active -> cancelled
+  end note
+
+  SOSANY --> CANCELLED : cancel():436
+  note on SOSANY
+    cancel() GUARD: owner-only
+      status NOT IN [COMPLETED, CANCELLED] -> 400
+    FEE: fee_amount = 5000 (CFA) when
+      previous status in [ACCEPTED, IN_PROGRESS]
+      else 0
+  end note
+
+  COMPLETED --> [*]
+  CANCELLED --> [*]
+
+  note bottom of SOS
+    READ MODEL:
+    active() treats as live:
+      [REQUESTED, ASSIGNED, IN_PROGRESS, ACCEPTED, ARRIVED]
+    index() attaches tracking only when
+      ACCEPTED or IN_PROGRESS
+    responder listing = union of
+      assigned_mechanic_id = me
+      OR status = REQUESTED
+      OR branch.manager_id = me
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' H. TRACKING SESSION (SOS live location)
+'    Model: App\Models\Maps\TrackingSession
+' ----------------------------------------------------------------------------
+
+state "TrackingSession" as TS <<sdlReceive>> {
+  [*] --> active : SOSTrackingController::store():83\nfirstOrCreate(entity_type, entity_id, active)\nGUARD by role:\n  requester        -> entityType='USER'\n  assigned mechanic -> 'MECHANIC'\n  else 403
+  state active
+  state completed
+  state cancelled
+  active --> completed : EmergencyRequestController::arrive():224\nbulk update of MECHANIC + USER sessions
+  active --> cancelled : EmergencyRequestController::decline():388\n[MECHANIC only, where active]
+  completed --> [*]
+  cancelled --> [*]
+}
+
+' ----------------------------------------------------------------------------
+' I. MARKETPLACE ORDER (two orthogonal state fields)
+'    Model: App\Models\Marketplace\Order (table orders)
+' ----------------------------------------------------------------------------
+
+state "Marketplace Order" as MO <<sdlReceive>> {
+
+  state "ORDER_STATUS machine" as OS {
+    [*] --> CREATED : OrderService::placeOrder():76
+    [*] --> PENDING : QuoteService::acceptQuote():36
+
+    state CREATED : order_status='CREATED'
+    state PENDING
+    state CONFIRMED
+    state PREPARING
+    state READY
+    state SHIPPED
+    state DELIVERED
+    state COMPLETED
+    state CANCELLED
+
+    note right of CREATED
+      DEAD-END INITIAL VALUE.
+      'CREATED' is NOT in the seller
+      updateStatus() whitelist, so it can
+      never advance. Seller dashboard counts
+      pending as where(order_status,'PENDING')
+      -> these orders are INVISIBLE.
+    end note
+
+    CREATED --> PENDING : <color:#b00>[NO WRITER]</color>
+    PENDING --> CONFIRMED : Seller\OrderController::updateStatus():63
+    CONFIRMED --> PREPARING : updateStatus()
+    PREPARING --> READY : updateStatus()
+    READY --> SHIPPED : updateStatus()
+    SHIPPED --> DELIVERED : updateStatus()
+      <color:#080>OR DeliveryController::update():42 cascade</color>
+    DELIVERED --> COMPLETED : updateStatus()
+    PENDING --> CANCELLED : updateStatus()
+    CONFIRMED --> CANCELLED : updateStatus()
+    SHIPPED --> CANCELLED : updateStatus()
+
+    state OSANY as OSANY
+    OSANY --> OSANY : updateStatus()\n<color:#b00>FLAT WHITETLIST, NO SOURCE-STATE\n GUARD, NO TRANSITION TABLE</color>\nnotifies buyer ORDER_STATUS_UPDATED
+  }
+
+  state "PAYMENT_STATUS machine" as PS {
+    [*] --> PayPending : OrderService:75 / QuoteService:35
+    state PayPending : payment_status='PENDING'
+    state PayPaid : payment_status='PAID'
+    PayPending --> PayPaid : <color:#b00>[NO WRITER ANYWHERE]</color>
+    note right of PayPaid
+      Only READ in 3 places:
+      Seller\FinanceController:26
+      Seller\AnalyticsController:18
+      Seller\DashboardController:24
+      Marketplace\OrderController::store():67-83
+      creates a PaymentTransaction
+      (transaction_type='MARKETPLACE')
+      but NEVER links it back to set PAID.
+      Exception is swallowed:
+        catch (\Exception) { // Keep order }
+    end note
+  }
+
+  OS --> PS : orthogonal (no transition)
+
+  note top of MO
+    placeOrder() PRE-FLIGHT GUARDS (lines 45-61),
+    all rows lockForUpdate():
+      every listing.seller_id    == data.seller_id
+      every listing.currency_id == data.currency_id
+      every listing.quantity    >= requested qty
+    total_amount = SUM(item subtotals)
+    logs ORDER_PLACED, notifies seller NEW_ORDER
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' J. DELIVERY (drives Order cascade)
+'    Model: App\Models\Marketplace\Delivery
+' ----------------------------------------------------------------------------
+
+state "Delivery" as DL <<sdlReceive>> {
+  [*] --> PREPARING : Seller\OrderController::updateStatus():75\n<color:#080>AUTO-CREATED when order_status=='CONFIRMED'\n and !order->delivery</color>\ndelivery_address = order->address->full_address\n  ?? 'Pickup at Store'
+  state PREPARING
+  state SHIPPED
+  state IN_TRANSIT
+  state DELIVERED
+  state CANCELLED
+  PREPARING --> SHIPPED : DeliveryController::update():38\n[also accepts tracking_number,\n delivery_provider, estimated_date]
+  SHIPPED --> IN_TRANSIT : update()
+  IN_TRANSIT --> DELIVERED : update()
+  PREPARING --> CANCELLED : update()
+  SHIPPED --> CANCELLED : update()
+  DELIVERED --> [*] : update()\ndelivered_date = now()\n<color:#b80>CASCADE: order.order_status = 'DELIVERED'</color>
+  note right of IN_TRANSIT
+    <color:#b00>IN_TRANSIT and CANCELLED are
+    never auto-reached — only via the
+    flat whitelist.</color>
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' K. PART REQUEST (B2B sourcing) — Model: PartRequest
+' ----------------------------------------------------------------------------
+
+state "PartRequest" as PR <<sdlReceive>> {
+  [*] --> OPEN : PartRequestController::store():33\n(also DB default)
+  state OPEN : status='OPEN', quantity default 1
+  state CLOSED
+  OPEN --> CLOSED : QuoteService::acceptQuote():27\n<color:#080>INSIDE the same DB::transaction\n as quote->ACCEPTED and Order creation</color>
+  OPEN --> CLOSED : PartRequestController::close():52\n[owner-only, no state guard]
+  CLOSED --> [*]
+  note right of PR
+    Declared but UNREACHABLE: REJECTED, CANCELLED, FULFILLED
+    BUG: $request->quotes() is used in eager loads
+    but no quotes() method exists on PartRequest
+    -> RelationNotFoundException at runtime.
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' L. PART QUOTE — Model: PartQuote
+' ----------------------------------------------------------------------------
+
+state "PartQuote" as PQ <<sdlReceive>> {
+  [*] --> SENT : QuoteService::submitQuote():15\nvia B2BQuoteController::store()\n[validates price, currency_id]
+  state SENT : status='SENT' (default)
+  state ACCEPTED
+  state REJECTED
+  state EXPIRED
+  SENT --> ACCEPTED : QuoteService::acceptQuote():24\nGUARD (controller:25):\n  quote.request.user_id != Auth::id() -> 403
+  note right of ACCEPTED
+    Same transaction:
+      PartQuote    -> ACCEPTED
+      PartRequest  -> CLOSED
+      Order created (PENDING / PENDING,
+        total_amount = quote.price)
+  end note
+  SENT --> REJECTED : <color:#b00>[NO WRITER — no update endpoint exists]</color>
+  SENT --> EXPIRED : <color:#b00>[NO WRITER]</color>
+  note bottom of PQ
+    B2BQuoteController exposes only
+    requests(), store(), myQuotes()
+    -> a quote is IMMUTABLE after creation.
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' M. PURCHASE ORDER (seller restocking) — Marketplace\PurchaseOrder
+' ----------------------------------------------------------------------------
+
+state "Marketplace PurchaseOrder" as PO <<sdlReceive>> {
+  [*] --> DRAFT : Seller\PurchaseController::store():109\n[po_number unique; items array|min:1;\n DB::transaction;\n total = SUM(unit_cost*qty)]
+  state DRAFT
+  state SENT
+  state CONFIRMED
+  state SHIPPED
+  state RECEIVED
+  state CANCELLED
+  DRAFT --> RECEIVED : PurchaseController::receive():156\nGUARD (idempotency):\n  if status == RECEIVED -> 422\nper item: received_quantity = quantity\nif ProductListing matches:\n  InventoryService::recordMovement(\n    id,'PURCHASE',qty,"PO #..")
+  note right of RECEIVED
+    SENT / CONFIRMED / SHIPPED / CANCELLED
+    <color:#b00>DECLARED, NO WRITER.</color>
+  end note
+  RECEIVED --> [*]
+}
+
+state "Garage PurchaseOrder (BROKEN)" as GPO <<sdlReceive>> {
+  [*] --> draft : PurchaseOrderService::createPurchaseOrder():21
+  state draft : <color:#b00>lowercase convention</color>
+  state received
+  draft --> received : receiveItems():75\nCONDITIONAL: if every item\n  received_quantity >= quantity
+  note on GPO
+    GUARD: if part_id present ->
+      RepairPart::increment('stock_quantity', qty)
+  end note
+  draft --> ANYX : updateStatus($status)\n<color:#b00>COMPLETELY UNGUARDED,\n no validation, no callers</color>
+  received --> [*]
+  state ANYX
+}
+
+' ----------------------------------------------------------------------------
+' N. PAYMENT TRANSACTION — best-formed machine in the codebase
+'    Model: App\Models\Finance\PaymentTransaction
+' ----------------------------------------------------------------------------
+
+state "PaymentTransaction" as PT <<sdlReceive>> {
+  [*] --> PENDING : initialize():26\nreference = 'PII-'.strtoupper(Str::random(10))\npayer_id = Auth::id()
+  state PENDING
+  state SUCCESS
+  state FAILED
+
+  note right of PENDING
+    SHORT-CIRCUIT: if config(services.notchpay.key)
+    is falsy, stays PENDING with NO gateway call.
+    On gateway Throwable:
+      local/testing -> report() + return txn
+      production     -> rethrow
+    On success stores notchpay_reference + checkout_url
+  end note
+
+  PENDING --> SUCCESS : handleWebhook():80
+  PENDING --> FAILED : handleWebhook():80
+  PENDING --> PENDING : handleWebhook():80
+  SUCCESS --> SUCCESS : handleWebhook()\n<color:#080>IDEMPOTENCY GUARD line 75:\n  if status == SUCCESS -> return (TERMINAL)</color>
+
+  SUCCESS --> [*]
+  FAILED --> [*]
+
+  state "WALLET_FUNDING nested credit" as WFC {
+    [*] --> Credit
+    state Credit
+    Credit --> [*]
+  }
+  PENDING --> WFC : if transaction_type == 'WALLET_FUNDING'
+  WFC --> SUCCESS : <color:#080>DOUBLE-CREDIT GUARD:\n  if !alreadyCredited && transaction->payer\n  -> WalletService::deposit(payer, amount, reference)\n  ALL inside DB::transaction</color>
+
+  note bottom of PT
+    NORMALIZER (PaymentService::normalizeStatus(), 99-106)
+      complete|completed|success|successful|paid
+        -> SUCCESS
+      failed|failure|canceled|cancelled|expired -> FAILED
+      default                               -> PENDING
+    ENTRY POINTS
+      handleWebhook(reference, status)
+      PaymentController::verify()  [payer_id != me -> 404]
+      PaymentController::callback()  [pre-normalises COMPLETE->SUCCESS]
+      PaymentController::webhook()   [HMAC-SHA256 signature, 401 on mismatch]
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' O. WALLET / WALLET TRANSACTION
+' ----------------------------------------------------------------------------
+
+state "Wallet" as WL <<sdlReceive>> {
+  [*] --> active : WalletService::getWallet():25\nget-or-create\n[balance 0,\n currency = user.country.currency_id ?? 1]
+  state active : status='active' (DB default)
+  note right of active
+    <color:#b00>NO transition code — field set
+    once, never changed.</color>
+  end note
+  active --> [*]
+}
+
+state "WalletTransaction" as WT <<sdlReceive>> {
+  [*] --> DEPOSIT : WalletService::deposit():33
+  [*] --> WITHDRAWAL : WalletService::withdraw():43
+  state DEPOSIT
+  state WITHDRAWAL
+  note right of WITHDRAWAL
+    GUARD (lines 39-41):
+      if wallet.balance < amount
+        throw 'Insufficient wallet balance'
+    Snapshots balance_before / balance_after
+    are written by the repository.
+    NO status field on this entity.
+  end note
+  DEPOSIT --> [*]
+  WITHDRAWAL --> [*]
+}
+
+' ----------------------------------------------------------------------------
+' P. USER SUBSCRIPTION — Model: Finance\UserSubscription
+' ----------------------------------------------------------------------------
+
+state "UserSubscription" as US <<sdlReceive>> {
+  [*] --> pending : subscribe():55\nreference = 'PII-SUB-'.random(12)\nauto_renew = true\nstart_date = end_date = now()
+  state pending : <color:#b00>lowercase convention</color>
+  state active
+  state canceled
+  state expired
+  state past_due
+
+  pending --> active : finalize():71\nGUARD (line 68): status IN\n [complete, completed, success,\n  successful, paid]\nend_date = now()+1year|1month
+  pending --> canceled : finalize():73\nGUARD (line 72): status IN\n [failed, canceled, expired]
+  pending --> pending : finalize() else-branch\n<color:#b00>SILENT NO-OP on an\n unrecognised gateway status</color>
+
+  active --> [*]
+  canceled --> [*]
+  note right of expired
+    expired / past_due: <color:#b00>NO WRITER.</color>
+    end_date is never compared to now()
+    to expire a subscription.
+  end note
+  note bottom of US
+    ENTRY POINTS
+      SubscriptionController::callback():63  (HMAC signed)
+      SubscriptionController::webhook():85   (HMAC signed)
+      lookup by notchpay_reference
+    PLAN GUARD: abort 404 if !plan || !plan->status
+    DEGRADE: ConnectionException|RequestException
+      -> report() + abort(503)
+    abort(502) if checkout_url empty
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' Q. WARRANTY CLAIM — Model: Garages\WarrantyClaim
+' ----------------------------------------------------------------------------
+
+state "WarrantyClaim" as WC <<sdlReceive>> {
+  [*] --> PENDING : WarrantyClaimController::store():32\n[Gate manageBranch;\n StoreWarrantyClaimRequest has NO\n status rule -> DB default;\n AuditService::log created]
+  state PENDING
+  state RESOLVED
+  PENDING --> RESOLVED : WarrantyService::resolveClaim():14\n<color:#b00>ORPHAN SERVICE — no controller calls it</color>
+  note right of RESOLVED
+    BUG: writes the approved amount into
+    'claim_amount', never 'approved_amount'.
+    resolved_at is NEVER set.
+  end note
+  PENDING --> PENDING : WarrantyClaimController::update():56\n<color:#b00>Request has no status rule\n -> status effectively IMMUTABLE via HTTP</color>
+  RESOLVED --> [*]
+}
+
+' ----------------------------------------------------------------------------
+' R. MESSAGING — Message / MessageStatus / UserPresence
+' ----------------------------------------------------------------------------
+
+state "Message" as MSG <<sdlReceive>> {
+  [*] --> SENT : ChatEngine::sendMessage():49\nLivewire\Messaging\ChatCenter:74\nLivewire\Garage\RepairChat:77
+  state SENT : status='SENT' (default)
+  state DELIVERED
+  state READ
+  SENT --> DELIVERED : <color:#b00>[NO WRITER]</color>
+  DELIVERED --> READ : <color:#b00>[NO WRITER on Message]</color>
+  note right of MSG
+    The designed home of the real machine is
+    MessageStatus (message_statuses):
+      message_id, user_id, status, timestamp
+    written by MessageRepositoryInterface::markAsRead()
+    ChatEngine::markAsRead():75-91 only
+      - repo->markAsRead(lastMessage.id, Auth::id())
+      - participants()->updateExistingPivot(
+            Auth::id(), ['last_seen_message_id'=>...])
+  end note
+  SENT --> [*]
+}
+
+state "UserPresence" as UP <<sdlReceive>> {
+  [*] --> OFFLINE
+  state OFFLINE
+  state ONLINE
+  state BUSY
+  OFFLINE --> ONLINE : <color:#b00>[NO WRITER in app/]</color>
+  ONLINE --> BUSY : <color:#b00>[NO WRITER]</color>
+  ONLINE --> OFFLINE : <color:#b00>[NO WRITER]</color>
+  note right of UP
+    The one route that touches it
+    (POST /messaging/presence/status ->
+     PresenceController::updateStatus)
+    never persists the status column.
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' S. NOTIFICATION (boolean machine)
+' ----------------------------------------------------------------------------
+
+state "Notification" as NT <<sdlReceive>> {
+  [*] --> unread
+  state unread : is_read = false
+  state read : is_read = true, read_at = now()
+  unread --> read : NotificationController::markAsRead()\nPOST notifications/{id}/read
+  unread --> read : POST notifications/read-all
+  read --> [*]
+  note right of NT
+    No 'status' column. Polymorphic link:
+      reference_type in [RepairOrder, Order,
+        EmergencyRequest, GarageAppointment,
+        Conversation]
+      reference_id
+    + category: Repair | Marketplace | Message
+    + priority: 'high' (EmergencyRequest:155)
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' T. DEAD / ORPHAN MACHINES — declared status, zero transition code
+' ----------------------------------------------------------------------------
+
+state "Declared-but-orphaned status columns" as ORPH <<sdlReceive>> {
+  state "MechanicAssignment" as MA
+  state "MechanicEmergencyService" as MES
+  state "MechanicPayment" as MP
+  state "Refund" as RF
+  state "WithdrawalRequest" as WR
+  state "PushLog" as PL
+  state "Vehicle (status)" as VS
+  state "GaragePayment" as GP
+  state "GarageInvoice" as GI
+  state "RepairWarranty" as RW
+
+  MA --> [*] : status='ASSIGNED' (default)\n<color:#b00>FULLY ORPHANED TABLE.\n MechanicService::getMyAssignments():57\n queries RepairOrder.assigned_mechanic_id\n directly, never this table.</color>
+  MES --> [*] : status='REQUESTED'\n<color:#b00>NO WRITER. The live SOS\n machine is EmergencyRequest.</color>
+  MP --> [*] : payment_status='pending'\n<color:#b00>NO WRITER</color>
+  RF --> [*] : status='PENDING' + processed_at\n<color:#b00>ZERO write sites outside $fillable</color>
+  WR --> [*] : status='PENDING' + processed_at\n<color:#b00>BYPASSED: WalletController::withdraw():38\n calls WalletService::withdraw()\n directly with reference 'Manual Withdrawal'</color>
+  PL --> [*] : status in PENDING,SENT,FAILED\n<color:#b00>NO WRITER</color>
+  VS --> [*] : status='active'\n(active|maintenance|sold)\n<color:#b00>NO WRITER — pure data attribute</color>
+  GP --> [*] : <color:#b00>NO WRITER</color>
+  GI --> [*] : status='unpaid'\nONE writer: generateInvoice():191\n<color:#b00>No transition to paid/partial.\n Web\RepairController:247 calls the\n NON-EXISTENT RepairService::recordPayment()</color>
+  RW --> [*] : status='active'\n<color:#b00>NEVER WRITTEN — read-only in\n Api\v1\WarrantyController</color>
+}
+
+' ----------------------------------------------------------------------------
+' U. GARAGE SUBSCRIPTION / INVITATION / MECHANIC PROFILE
+' ----------------------------------------------------------------------------
+
+state "GarageSubscription" as GS <<sdlReceive>> {
+  [*] --> active : SubscriptionService::createSubscription():62
+  state active : status='active'\ncomment: active|cancelled|expired|past_due
+  state cancelled
+  state expired
+  state past_due
+  active --> cancelled : <color:#b00>[NO WRITER]</color>
+  active --> expired : <color:#b00>[NO WRITER]</color>
+  note right of active
+    getActiveSubscription():20-23
+      where status='active'
+      and (ends_at IS NULL OR ends_at > now())
+  end note
+  active --> [*]
+}
+
+state "GarageInvitation (derived state)" as GI2 <<sdlReceive>> {
+  [*] --> PENDING : "implicit: accepted_at IS NULL\n PENDING GUARD (MechanicService:68,79):\n  whereNull(accepted_at)\n  AND expires_at > now()"
+  state PENDING
+  state ACCEPTED
+  PENDING --> ACCEPTED : acceptInvitation():88\naccepted_at = now()\nDB::transaction also creates:\n  GarageEmployee(position=MECHANIC,\n    hire_date=now, status=true)\n  MechanicEmployment(employment_status=ACTIVE)\nGUARD: mechanic profile must pre-exist\n  else throw 'Mechanic profile not found.'
+  PENDING --> [*] : declineInvitation():120\n<color:#b00>HARD DELETE, not a state</color>
+  ACCEPTED --> [*]
+}
+
+state "MechanicProfile" as MP2 <<sdlReceive>> {
+  state "verification_status" {
+    [*] --> pending : createProfile():27
+    pending --> [*] : <color:#b00>NO OTHER WRITER</color>
+  }
+  state "availability_status" {
+    [*] --> AVAILABLE : DB default 'AVAILABLE'
+    AVAILABLE --> [*] : <color:#b00>NO WRITER.\n updateAvailability():52-55 actually\n CREATES a MechanicAvailability row\n instead of updating this field</color>
+  }
+  state "MechanicEmployment.employment_status" {
+    [*] --> ACTIVE : acceptInvitation():105\nthe ONLY write
+  }
+}
+
+' ----------------------------------------------------------------------------
+' V. INCIDENT / ACCIDENT
+' ----------------------------------------------------------------------------
+
+state "Incident (Fleets\Accident)" as INC <<sdlReceive>> {
+  [*] --> REPORTED : IncidentController::store():41\nGUARD: vehicle.owner_id != me -> 403\nseverity in MINOR|MEDIUM|SEVERE
+  state REPORTED : status='REPORTED' (default)
+  REPORTED --> [*] : <color:#b00>NO FURTHER TRANSITIONS</color>
+  note right of INC
+    Model lives in App\Models\Fleets\Accident
+    but uses protected $table = 'vehicle_accidents'
+    and serves the Identity/Vehicle incident flow.
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' W. PRODUCT LISTING / SELLER PROFILE — boolean-vs-string drift
+' ----------------------------------------------------------------------------
+
+state "ProductListing" as PL2 <<sdlReceive>> {
+  [*] --> active : Seller\ProductController:87\n<color:#b00>DB column is BOOLEAN default true,\n but the code writes the STRING 'active'.\n ProductListing does NOT use the\n NormalizesBooleanStatus concern.</color>
+  state active
+  state inactive
+  state "arbitrary string" as ANYSTR
+  active --> ANYSTR : Seller\ProductController::update():153\nvalidates 'status' => 'sometimes|string'\n<color:#b00>ANY STRING ACCEPTED</color>
+  state availability : default 'IN_STOCK' — <color:#b00>NO WRITER</color>
+  ANYSTR --> [*]
+}
+
+@enduml

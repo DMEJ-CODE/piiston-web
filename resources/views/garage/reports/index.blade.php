@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Rapports & Statistiques')">
+<x-layouts::app :title="__('garage.Rapports & Statistiques')">
     <x-garage.index-header
         title="Rapports & Performance"
         subtitle="Analytique détaillée de l'atelier - {{ $branch->name }}"

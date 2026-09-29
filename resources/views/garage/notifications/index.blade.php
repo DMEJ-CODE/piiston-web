@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Notifications Garage')">
+<x-layouts::app :title="__('garage.Notifications Garage')">
     <x-garage.index-header
         title="Centre de Notifications"
         subtitle="Alertes et messages importants - {{ $branch->name }}"

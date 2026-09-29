@@ -1,7 +1,7 @@
 <div class="flex flex-col gap-6 pb-8">
     <x-admin.index-header
-        title="Paramètres Système"
-        subtitle="Configuration globale de la plateforme"
+        title="System Settings"
+        subtitle="Global platform configuration"
     />
 
     <div class="grid grid-cols-12 gap-6">
@@ -10,24 +10,24 @@
                 <form wire:submit="saveSettings" class="space-y-8">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <flux:field>
-                            <flux:label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Nom de la Plateforme</flux:label>
+                            <flux:label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Platform Name</flux:label>
                             <flux:input type="text" wire:model="form.platform_name" placeholder="Piiston" class="rounded-xl border-zinc-100 dark:border-white/5" />
                         </flux:field>
 
                         <flux:field>
-                            <flux:label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Email de Support</flux:label>
+                            <flux:label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Support Email</flux:label>
                             <flux:input type="email" wire:model="form.support_email" placeholder="support@piiston.com" class="rounded-xl border-zinc-100 dark:border-white/5" />
                         </flux:field>
                     </div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <flux:field>
-                            <flux:label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Mise à jour des CGU</flux:label>
+                            <flux:label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Terms Update</flux:label>
                             <flux:input type="datetime-local" wire:model="form.terms_updated_at" class="rounded-xl border-zinc-100 dark:border-white/5" />
                         </flux:field>
 
                         <flux:field>
-                            <flux:label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Mise à jour Confidentialité</flux:label>
+                            <flux:label class="text-[10px] font-black uppercase tracking-widest text-zinc-500">Privacy Update</flux:label>
                             <flux:input type="datetime-local" wire:model="form.privacy_updated_at" class="rounded-xl border-zinc-100 dark:border-white/5" />
                         </flux:field>
                     </div>
@@ -47,14 +47,14 @@
                         </div>
 
                         <flux:field>
-                            <flux:label class="text-[9px] font-black uppercase tracking-[2px] text-white/30 mb-2">Message de maintenance</flux:label>
-                            <flux:textarea wire:model="form.maintenance_message" placeholder="La plateforme est actuellement en maintenance..." rows="3" class="bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/20" />
+                            <flux:label class="text-[9px] font-black uppercase tracking-[2px] text-white/30 mb-2">Maintenance Message</flux:label>
+                            <flux:textarea wire:model="form.maintenance_message" placeholder="The platform is currently under maintenance..." rows="3" class="bg-white/5 border-white/10 text-white rounded-xl placeholder:text-white/20" />
                         </flux:field>
                     </div>
 
                     <div class="flex justify-end gap-3 pt-6 border-t border-zinc-50 dark:border-white/5">
                         <flux:button type="submit" variant="primary" class="rounded-xl font-black uppercase text-[10px] bg-gradient-to-br from-blue-600 to-blue-500 border-none shadow-lg px-8 py-2.5">
-                            Enregistrer les Paramètres
+                            Save Settings
                         </flux:button>
                     </div>
                 </form>

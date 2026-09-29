@@ -37,7 +37,7 @@ class DiagnosisController extends Controller
         $diagnosis = $this->diagnosisService->diagnoseVehicle(
             $vehicle,
             $validated['symptoms'],
-            $validated['dtc_code']
+            $validated['dtc_code'] ?? null
         );
 
         return response()->json($diagnosis, 201);

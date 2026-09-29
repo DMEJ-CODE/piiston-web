@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Workflows\CreateRepairOrderRequest;
+use App\Http\Requests\Workflows\UpdateRepairOrderRequest;
 use App\Http\Resources\Workflows\RepairResource;
 use App\Repositories\Workflows\RepairRepositoryInterface;
 use App\Services\Workflows\RepairService;
@@ -51,6 +52,32 @@ class RepairController extends Controller
         Gate::authorize('view', $repair);
 
         return response()->json(new RepairResource($repair->load(['vehicle', 'garageCustomer.user', 'mechanic', 'diagnosis', 'estimate', 'progress'])));
+    }
+
+    public function update(UpdateRepairOrderRequest $request, int $id): JsonResponse
+    {
+        $repair = $this->repairRepository->findById($id);
+        if (! $repair) {
+            return response()->json(['message' => 'Repair not found'], 404);
+        }
+
+        Gate::authorize('update', $repair);
+
+        $data = $request->validated();
+        if (isset($data['status'])) {
+            if ($data['status'] === 'COMPLETED') {
+                $this->repairService->completeRepair($repair);
+            } else {
+                $this->repairService->updateStatus($repair, $data['status']);
+            }
+        }
+
+        $repair->update(collect($data)->except('status')->toArray());
+
+        return response()->json([
+            'message' => 'Repair order updated successfully',
+            'repair' => new RepairResource($repair->fresh(['vehicle', 'garageCustomer.user', 'mechanic', 'diagnosis', 'estimate'])),
+        ]);
     }
 
     public function history(int $id): JsonResponse

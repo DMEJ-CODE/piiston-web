@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Devis')">
+<x-layouts::app :title="__('garage.Devis')">
     <x-garage.index-header
         title="Devis & Estimations"
         subtitle="Gestion des propositions commerciales - {{ $branch->name }}"

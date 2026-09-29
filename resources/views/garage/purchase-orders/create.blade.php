@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Nouvelle commande fournisseur')">
+<x-layouts::app :title="__('garage.Nouvelle commande fournisseur')">
     <flux:heading size="xl">Nouvelle commande fournisseur</flux:heading>
     <flux:text class="mt-2">Créer une commande pour {{ $branch->name }}.</flux:text>
 

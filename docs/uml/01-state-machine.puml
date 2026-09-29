@@ -1,0 +1,279 @@
+@startuml
+' ============================================================================
+' Piiston - State Machine Diagrams
+' Mobile (Flutter) + Web/API (Laravel 13)
+' Sources: app/Services/**, app/Http/Controllers/**, lib/services/**, lib/pages/**
+' ============================================================================
+
+title Piiston — State Machines (4a/4b/4c/4d)
+
+' ----------------------------------------------------------------------------
+' 1. MOBILE AUTH SESSION STATE MACHINE
+'    Source: lib/main.dart, lib/loading.dart, lib/auth/*.dart, auth_services.dart
+'    Gate: presence of 'auth_token' in FlutterSecureStorage (no expiry check)
+' ----------------------------------------------------------------------------
+
+state "MOBILE AUTH SESSION" as AuthSM <<sdlReceive>> {
+
+  [*] --> Launching : main() / SplashScreen '/loading'
+
+  state Launching {
+    [*] --> ThemeLoad : ThemeService().init()
+    ThemeLoad --> I18nLoad : LocalizationService.load()
+    state I18nLoad {
+      [*] --> Fork
+      Fork --> FcmInit : Firebase.initializeApp()
+      Fork --> AuthProbe : _performEarlyAuthCheck()
+    }
+    note right of AuthProbe
+      _performEarlyAuthCheck()
+      token absent  -> /welcome
+      GET auth/user OK -> /home
+      network fail   -> /home (optimistic)
+    end note
+  }
+
+  Launching --> Welcome : NavigationService.initialTargetRoute = /welcome
+  Launching --> Home : initialTargetRoute = /home
+
+  state Welcome {
+    [*] --> WelcomeIdle
+  }
+  Welcome --> Register : "Get Started -> /register"
+  Welcome --> Login : "Sign In -> /login"
+
+  state Register {
+    [*] --> RegForm
+    RegForm --> EmailProbe : _handleRegister()\n[form valid: pw>=8, pw==confirm]
+    EmailProbe --> RegForm : "POST auth/check-email !success"
+    EmailProbe --> PhoneEntry : success -> /verify-phone
+  }
+
+  state PhoneEntry {
+    [*] --> PhoneInput
+    PhoneInput --> OtpSent : "POST auth/send-otp\n[phone.length >= 8]"
+    PhoneInput --> PhoneInput : "invalid phone"
+  }
+
+  state OtpSent {
+    [*] --> OtpInput : _isOtpSent = true
+    OtpInput --> OtpSent : "POST auth/verify-otp fail\n[code.length == 6]"
+    OtpInput --> RoleSelect : "POST auth/verify-otp success"
+    OtpInput --> PhoneEntry : "Change Number -> _isOtpSent=false"
+  }
+
+  state RoleSelect {
+    [*] --> RolePick
+    RolePick --> RolePick : "button disabled (_selectedRole==null)"
+    RolePick --> Home : "POST auth/register success\n[VEHICLE_OWNER | GARAGE_OWNER | SPARE_PART_SELLER]"
+  }
+
+  state Login {
+    [*] --> LoginForm
+    LoginForm --> Home : "POST auth/login success\n[access_token stored -> auth_token]"
+    LoginForm --> LoginForm : "401 -> 'Invalid email or password'"
+  }
+
+  state Authenticated {
+    [*] --> RoleResolve : GET auth/user
+    state RoleResolve {
+      [*] --> RoleBranch
+      RoleBranch --> SellerOnboarding : "role=SELLER && is_onboarded==false"
+      RoleBranch --> TabbedHome : otherwise
+    }
+  }
+
+  state SellerOnboarding {
+    [*] --> OnboardForm : POST seller/onboarding/complete
+    OnboardForm --> TabbedHome : success (is_onboarded = true)
+  }
+
+  state TabbedHome {
+    [*] --> NavIndex
+    note right
+      Home._currentIndex persisted as
+      SharedPreferences 'last_home_index'
+    end note
+    state NavIndex {
+      [*] --> OwnerTabs : VEHICLE_OWNER
+      OwnerTabs --> MechanicTabs : role resolved MECHANIC
+      MechanicTabs --> SellerTabs : role resolved SELLER
+    }
+  }
+
+  state Expired {
+    [*] --> TokenCleared : GET auth/user -> 401
+    TokenCleared --> Welcome : delete 'auth_token'
+  }
+
+  Welcome --> [*] : logout()
+  TabbedHome --> Expired : 401 on any ApiService.get
+  Expired --> Welcome
+  TabbedHome --> Welcome : logout -> pushNamedAndRemoveUntil
+
+  note bottom of AuthSM
+    <b>Call sub-machine overlay</b>
+    main.dart MaterialApp.builder always mounts
+    _IncomingCallOverlay (on CallService.incomingCall != null)
+    and _CallBannerOverlay (hidden on /call, /loading, /welcome)
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' 2. MOBILE SOS / EMERGENCY REQUEST STATE MACHINE (client view)
+'    Source: lib/services/emergency_service.dart
+'            lib/pages/workflow/emergency_assistance.dart (5s poll)
+'            lib/pages/workflow/mechanic_emergency_hub.dart
+'            lib/pages/dashboard/mechanic_dashboard.dart (10s poll)
+' ----------------------------------------------------------------------------
+
+state "MOBILE SOS (EmergencyRequest)" as SOSSMS <<sdlReceive>> {
+  [*] --> Idle
+
+  state Idle {
+    [*] --> NoActiveRequest : GET emergency-requests/active
+  }
+  NoActiveRequest --> Composing : "user taps SOS"
+  NoActiveRequest --> ResponderIdle : "role = MECHANIC / branch manager"
+
+  state Composing {
+    [*] --> FormFill
+    FormFill --> Geolocating : "Geolocator.getCurrentPosition"
+    Geolocating --> Requested : "POST emergency-requests -> 201"
+  }
+
+  state Requested {
+    [*] --> AwaitingGarage
+    note right of AwaitingGarage
+      LIVE POLLING: Timer.periodic 5s
+      GET emergency-requests/active
+      POST emergency-requests/{id}/tracking
+      {lat,lng} only while status in
+      [REQUESTED, ACCEPTED, IN_PROGRESS]
+    end note
+  }
+
+  state Accepted {
+    [*] --> TrackingRescuer
+  }
+  state InProgress {
+    [*] --> TrackingRescuer
+  }
+  state TrackingRescuer {
+    [*] --> WatchArrival
+  }
+  state Arrived {
+    [*] --> WorkInProgress
+  }
+  state EstimatePending {
+    [*] --> AwaitApproval
+  }
+  state Completed {
+    [*] --> [*]
+  }
+  state Cancelled {
+    [*] --> [*]
+  }
+
+  AwaitingGarage --> Accepted : "POST /accept -> 200\n[409 -> sos_already_accepted]"
+  AwaitingGarage --> Cancelled : "POST /cancel (owner, fee if accepted)"
+  AwaitingGarage --> Requested : "POST /decline by mechanic\n[branch re-opens]"
+  Accepted --> Arrived : "POST /arrive\n[assigned_mechanic_id == me]"
+  Accepted --> EstimatePending : "POST /service-sheet -> 200/201"
+  InProgress --> Arrived : "POST /arrive"
+  InProgress --> EstimatePending : "POST /service-sheet"
+  Arrived --> Completed : "POST /complete\n[mechanic or branch.manager_id==me]"
+  Arrived --> EstimatePending : "POST /service-sheet"
+  EstimatePending --> Accepted : "POST /approve-estimate (owner)\nSTATE RE-ENTRY LOOP"
+  EstimatePending --> Completed : "POST /complete"
+  Requested --> Cancelled : "POST /cancel"
+  Accepted --> Cancelled : "POST /cancel (fee 5000 CFA)"
+  InProgress --> Cancelled : "POST /cancel (fee 5000 CFA)"
+
+  state ResponderIdle {
+    [*] --> PollingHub
+    PollingHub --> ResponderIdle : "GET emergency-requests\nstatus == REQUESTED (new alert)"
+  }
+  PollingHub --> Claiming : "tap Accept alert"
+  Claiming --> Accepted : "POST /accept {branch_id} -> 200\n[400 if status != REQUESTED]"
+  PollingHub --> ResponderIdle : "POST /decline -> 200"
+
+  note bottom of Arrived
+    On arrival the responder page opens
+    /workflow/sos-intervention-form.
+    Dashboard polling runs every 10s
+    (mechanic_dashboard.dart) while
+    emergency_assistance.dart polls every 5s.
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' 3. MOBILE CALL SESSION STATE MACHINE (purely client-side)
+'    Source: lib/services/call_service.dart (singleton, 3 ValueNotifiers)
+' ----------------------------------------------------------------------------
+
+state "MOBILE CALL SESSION (CallService)" as CallSM <<sdlReceive>> {
+  [*] --> Ringing
+
+  state Ringing {
+    [*] --> IncomingCallVisible
+    note right
+      triggered by FCM push with
+      reference_type == 'call'
+      via NotificationHandler ->
+      CallService.receiveCall()
+    end note
+  }
+
+  IncomingCallVisible --> Active : acceptCall()\n[null-safe early return if null]
+  IncomingCallVisible --> Ringing : declineCall()\n[incomingCall = null]
+
+  state Active {
+    [*] --> TimerRunning : startCall()\n[durationSeconds = 0]
+    state TimerRunning {
+      [*] --> Ticking : Timer.periodic 1s
+      Ticking --> Ticking : durationSeconds.value++
+    }
+  }
+
+  Active --> Ringing : endCall()\n[clear currentSession,\n cancel timer, reset counter]
+  note bottom of Active
+    No WebRTC / SDP / media stack.
+    Outbound ring: MessagingService.initiateCall()
+    -> POST conversations/{id}/call {type}
+  end note
+}
+
+' ----------------------------------------------------------------------------
+' 4. MOBILE OFFLINE / CONNECTIVITY STATE MACHINE
+'    Source: lib/services/api_service.dart (static ValueNotifier<bool> isOffline)
+' ----------------------------------------------------------------------------
+
+state "MOBILE CONNECTIVITY (ApiService)" as NetSM <<sdlReceive>> {
+  [*] --> Online
+
+  Online --> Offline : "SocketException\nor error string contains 'TimeoutException'\n[any verb]"
+  Online --> Offline : "GET cache MISS on exception\n-> still marks offline"
+
+  state Offline {
+    [*] --> RecoveryArmed : _startRecoveryTimer() [idempotent]
+    state RecoveryArmed {
+      [*] --> Probing : Timer.periodic 10s
+      Probing --> Recovered : "bare GET serverRoot\nstatusCode >= 200"
+      Probing --> Probing : "timeout(3s) or failure"
+      Probing --> Online : "isOffline already false -> self-cancel"
+    }
+  }
+
+  Offline --> Online : "any successful response\n(statusCode parsed OK)"
+
+  note bottom of Offline
+    GET fallback contract:
+    on ANY exception -> read piiston_cache_get_<endpoint>
+    if hit -> synthesise http.Response
+    statusCode 200 + header 'x-cached-response: true'
+    (header never inspected by any service)
+  end note
+}
+
+@enduml

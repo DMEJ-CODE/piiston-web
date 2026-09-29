@@ -56,7 +56,7 @@ class CheckInController extends Controller
         $branch = $request->attributes->get('garageBranch');
         $this->authorize('operate', $branch);
 
-        $request->validate([
+        $data = $request->validate([
             'customer_id' => ['required', 'exists:garage_customers,id'],
             'vehicle_id' => ['required', 'exists:vehicles,id'],
             'appointment_id' => ['nullable', 'exists:garage_appointments,id'],
@@ -68,8 +68,6 @@ class CheckInController extends Controller
             'create_repair_order' => ['nullable', 'boolean'],
             'signature_data' => ['nullable', 'string'],
         ]);
-
-        $data = $request->validated();
 
         // Handle signature if provided (save to storage)
         if ($request->filled('signature_data')) {
@@ -113,7 +111,7 @@ class CheckInController extends Controller
 
         $checkIn = VehicleCheckIn::where('branch_id', $branch->id)->findOrFail($checkInId);
 
-        $request->validate([
+        $validated = $request->validate([
             'customer_id' => ['required', 'exists:garage_customers,id'],
             'vehicle_id' => ['required', 'exists:vehicles,id'],
             'appointment_id' => ['nullable', 'exists:garage_appointments,id'],
@@ -122,7 +120,7 @@ class CheckInController extends Controller
             'notes' => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $checkIn->update($request->validated());
+        $checkIn->update($validated);
 
         return redirect()->route('garage.check-ins.index')->with('success', 'Enregistrement mis à jour avec succès.');
     }

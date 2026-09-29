@@ -13,7 +13,7 @@ class MarketplaceController extends Controller
     public function index(Request $request)
     {
         $query = ProductListing::with(['part.brand', 'part.category', 'seller', 'currency'])
-            ->where('status', true);
+            ->whereIn('status', ['active', 1, 'ACTIVE', 'TRUE', true]);
 
         // Filter by vehicle compatibility
         if ($request->has('vehicle_model_id')) {

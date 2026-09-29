@@ -1,0 +1,1691 @@
+@startuml
+' ============================================================================
+' Piiston - Class Diagram (domain model)
+' Laravel Eloquent models + key Flutter service/model classes.
+' Sources: app/Models/**, app/Repositories/**, app/Policies/**,
+'          lib/models/**, lib/services/**
+' ============================================================================
+
+title Piiston — Class Diagram (Domain + Mobile)
+
+' ============================== BACKEND ====================================
+
+package "<<identity>>\napp\\Models\\Identity" as PId {
+
+  class User {
+    -id : int
+    -name : string <<accessor>> = "first_name last_name"
+    -first_name : string
+    -last_name : string
+    -email : string
+    -phone : string
+    -password : string <<hashed>>
+    -country_id : int
+    -language_id : int
+    -timezone_id : int
+    -status : string = 'active'
+    -profile_photo : string
+    -date_of_birth : date
+    -gender : string
+    -last_login_at : datetime
+    -phone_verified_at : datetime
+    -email_verified_at : datetime
+    --
+    +hasRole(roleName : string) : bool
+    +hasPermission(permissionName : string) : bool
+    +initials() : string
+    +getNameAttribute() : string
+    +setNameAttribute(value) : void
+  }
+
+  enum Role {
+    VEHICLE_OWNER
+    GARAGE_OWNER
+    MECHANIC
+    SPARE_PART_SELLER
+    FLEET_MANAGER
+    ADMIN
+  }
+
+  class Permission {
+    -name : string
+    -module : string
+    <<65 garage.* + vehicle.*\nrepair.manage · order.manage\nuser.verify>>
+  }
+
+  class Device <<HasApiTokens>> {
+    -token : string <<unique>>
+    -name : string
+    -type : string
+    -abilities : json
+    -last_used_at : datetime
+  }
+
+  class UserAddress {
+    -type : string
+    -is_default : bool
+  }
+
+  class UserPreference {
+    -country_id : int
+    -currency_id : int
+    -theme : string
+    -language : string
+    -notifications : json
+  }
+
+  class UserActivity {
+    -type : string
+    <<VEHICLE_ADDED · APPOINTMENT_BOOKED\nSOS_REQUESTED · ORDER_PLACED>>
+  }
+}
+
+package "<<vehicles>>\napp\\Models\\Vehicles" as PVeh {
+
+  class Vehicle {
+    -id : int
+    -owner_id : int
+    -country_id : int
+    -brand_id : int
+    -model_id : int
+    -generation_id : int
+    -year : int
+    -vin : string
+    -registration_number : string
+    -license_plate : string
+    -color : string
+    -fuel_type_id : int
+    -transmission_id : int
+    -mileage : int
+    -engine_number : string
+    -status : string = 'active'
+    --
+    <color:#b00>#maintenances() IS CALLED BY\nRepairService:159 AND\nEmergencyRequestController:255\nBUT IS NOT DEFINED -> fatal</color>
+  }
+
+  class VehicleBrand {
+    -name : string
+    -logo : string
+  }
+  class VehicleModel {
+    -name : string
+  }
+  class VehicleGeneration {
+    -name : string
+    -year_from : int
+    -year_to : int
+  }
+  class FuelType {
+    -name : string
+  }
+  class Transmission {
+    -name : string
+  }
+  class VehicleMaintenance {
+    -vehicle_id : int
+    -type : string
+    -description : text
+    -cost : decimal
+    -performed_at : date
+    -mileage : int
+    -status : string = 'completed'
+    <color:#b00>DB default lowercase 'completed',\nbut code writes 'COMPLETED'</color>
+  }
+  class VehicleDocument {
+    -type : string
+    -number : string
+    -expires_at : date
+  }
+  class VehicleHealth {
+    -score : int
+    -last_checked_at : datetime
+  }
+  class VehicleOwnership {
+    -from_date : date
+    -to_date : date
+  }
+  class VehicleImage {
+    -path : string
+  }
+  class VehicleHistory <<RelationNotFound>>
+  class VehicleUsageLog {
+    -mileage : int
+    -logged_at : datetime
+  }
+}
+
+package "<<garages>>\napp\\Models\\Garages" as PGar {
+
+  class GarageCompany {
+    -owner_id : int
+    -name : string
+    -legal_name : string
+    -registration_number : string
+    -tax_number : string
+    -email : string
+    -phone : string
+    -website : string
+    -logo : string
+    -has_annexes : bool
+    -verification_status : string
+    -status : bool <<NormalizesBooleanStatus>>
+    +getRatingAttribute() : float
+  }
+
+  class GarageBranch <<authorization pivot>> {
+    -company_id : int
+    -manager_id : int
+    -address_id : int
+    -name : string
+    -phone : string
+    -email : string
+    -business_hours : json
+    -latitude : decimal
+    -longitude : decimal
+    -status : bool <<NormalizesBooleanStatus>>
+  }
+
+  class RepairOrder <<CENTRAL ENTITY>> {
+    -check_in_id : int
+    -branch_id : int
+    -vehicle_id : int
+    -customer_id : int
+    -appointment_id : int
+    -workshop_bay_id : int
+    -assigned_mechanic_id : int
+    -problem_description : text
+    -internal_notes : text
+    -priority : string
+    -status : string
+    -status_history : json <<array cast>>
+    -estimated_cost : decimal
+    -final_cost : decimal
+    -opened_at : datetime
+    -closed_at : datetime
+    -quality_check_at : datetime
+    -quality_checked_by : int
+    --
+    <<constants>>
+    STATUS_REQUESTED, STATUS_DIAGNOSIS,
+    STATUS_QUOTE_CREATED, STATUS_WAITING_APPROVAL,
+    STATUS_APPROVED, STATUS_SCHEDULED,
+    STATUS_IN_PROGRESS, STATUS_WAITING_PARTS,
+    STATUS_COMPLETED, STATUS_QUALITY_CHECK,
+    STATUS_DELIVERED, STATUS_CLOSED
+    <color:#b00>DB default is 'OPEN' —\nno constant covers it</color>
+    --
+    <color:#b00>garageCustomer() is DEFINED but\nthe codebase reads $repair->customer\n-> silently null, 2 notifications\nnever fire</color>
+  }
+
+  class RepairEstimate {
+    -repair_order_id : int
+    -branch_id : int
+    -created_by : int
+    -labor_cost : decimal
+    -parts_cost : decimal
+    -tax : decimal
+    -discount : decimal
+    -total_amount : decimal
+    -status : string
+    -public_token : string
+    -token_expires_at : datetime
+    -valid_until : date
+    -notes : text
+    <color:#b00>public_token is NEVER generated</color>
+  }
+
+  class RepairTask {
+    -repair_order_id : int
+    -title : string
+    -status : string
+    <color:#b00>'pending' lowercase initial,\n'APPROVED'/'REJECTED' uppercase</color>
+  }
+
+  class VehicleDiagnosis {
+    -repair_order_id : int
+    -severity : string
+    -fault_codes : json
+    -notes : text
+  }
+
+  class VehicleCheckIn {
+    -appointment_id : int
+    -branch_id : int
+    -vehicle_id : int
+    -customer_id : int
+    -received_by : int
+    -arrival_date : datetime
+    -mileage : int
+    -fuel_level : string
+    -vehicle_condition : string
+    -checklist : json
+    -signature_path : string
+    -status : string
+  }
+
+  class VehicleDelivery {
+    -repair_order_id : int
+    -delivered_at : datetime
+    -mileage_at_delivery : int
+    -delivered_to : string
+  }
+
+  class QualityCheck {
+    -checked_by : int
+    -check_date : datetime
+    -result : string
+    -notes : text
+  }
+
+  class GarageAppointment {
+    -request_id : int
+    -branch_id : int
+    -vehicle_id : int
+    -customer_id : int
+    -scheduled_date : datetime
+    -scheduled_time : time
+    -proposed_by_id : int
+    -status : string
+    <<STATUS_REQUESTED · STATUS_PROPOSED\nSTATUS_CONFIRMED · STATUS_CANCELLED>>
+  }
+
+  class GarageCustomer {
+    -branch_id : int
+    -user_id : int
+    -customer_type : string
+  }
+
+  class GarageEmployee {
+    -branch_id : int
+    -user_id : int
+    -position : string
+    -hire_date : date
+    -status : bool
+  }
+
+  class GarageService {
+    -branch_id : int
+    -name : string
+    -duration_minutes : int
+    -price : decimal
+    -status : string
+    +scopeActive()
+  }
+
+  class WorkshopBay {
+    -branch_id : int
+    -name : string
+    -type : string
+    -capacity : int
+    -status : string
+  }
+
+  class GarageInventory {
+    -branch_id : int
+    -part_id : int
+    -quantity : int
+    -min_quantity : int
+  }
+
+  class RepairPart {
+    -name : string
+    -sku : string
+    -stock_quantity : int
+    -unit_cost : decimal
+  }
+
+  class RepairPartUsage {
+    -repair_order_id : int
+    -part_id : int
+    -quantity : int
+    -unit_price : decimal
+  }
+
+  class RepairProgress {
+    -repair_order_id : int
+    -status : string
+    -percentage : int
+  }
+
+  class RepairApproval {
+    -repair_order_id : int
+    -task_id : int
+    -approved_by : int
+    -approval_status : string <<NEVER WRITTEN>>
+  }
+
+  class WarrantyClaim {
+    -branch_id : int
+    -repair_order_id : int
+    -customer_id : int
+    -description : text
+    -claim_amount : decimal
+    -approved_amount : decimal <<NEVER WRITTEN>>
+    -resolution_notes : text
+    -status : string = 'PENDING'
+    -resolved_at : datetime <<NEVER SET>>
+  }
+
+  class RepairWarranty {
+    -repair_order_id : int
+    -duration_months : int
+    -status : string = 'active' <<NEVER WRITTEN>>
+  }
+
+  class GarageInvoice {
+    -repair_order_id : int
+    -number : string
+    -subtotal : decimal
+    -tax : decimal
+    -total : decimal
+    -status : string = 'unpaid'
+  }
+  class GaragePayment {
+    -invoice_id : int
+    -amount : decimal
+    -method : string
+    -status : string <<NO WRITER>>
+  }
+  class GarageReview {
+    -rating : int
+    -comment : text
+  }
+  class GarageSupplier {
+    -branch_id : int
+    -name : string
+    -contact : string
+  }
+  class GarageSubscription {
+    -company_id : int
+    -plan_id : int
+    -starts_at : datetime
+    -ends_at : datetime
+    -status : string = 'active'
+  }
+  class GarageInvitation {
+    -branch_id : int
+    -user_id : int
+    -role : string
+    -accepted_at : datetime <<DERIVES STATE>>
+    -expires_at : datetime
+    <color:#b00>NO status column</color>
+  }
+  class GarageDepartment
+  class GarageEmployeeSchedule
+  class GarageMedia <<morph>>
+  class EmployeeSchedule
+  class AuditLog {
+    -auditable_type : string
+    -event : string
+    -old_values : json
+    -new_values : json
+  }
+  class PurchaseOrderItem <<NO GaragePurchaseOrder>>
+    <color:#b00>PurchaseOrderService and\nGarage\PurchaseOrderController both\nimport a NON-EXISTENT\nApp\\Models\\Garages\\GaragePurchaseOrder</color>
+  }
+}
+
+package "<<marketplace>>\napp\\Models\\Marketplace" as PMkt {
+
+  class SellerProfile {
+    -user_id : int
+    -business_name : string
+    -business_type : string
+    -registration_number : string
+    -tax_number : string
+    -logo : string
+    -rating : float
+    -verification_status : string = 'pending'
+    -status : bool <color:#b00>boolean column,\nreceives string 'active'</color>
+    -is_onboarded : bool
+    -business_hours : json <<NOT in \$fillable>>
+    -delivery_terms : json <<NOT in \$fillable>>
+  }
+
+  class ProductListing {
+    -seller_id : int
+    -part_id : int
+    -price : decimal
+    -professional_price : decimal
+    -sku : string
+    -currency_id : int
+    -quantity : int
+    -condition : string
+    -availability : string = 'IN_STOCK'
+    -delivery_option : string
+    -status : bool <color:#b00>boolean column,\ncode writes 'active';\nupdate() accepts any string</color>
+    +getIsLikedAttribute() : bool
+  }
+
+  class Order {
+    -buyer_id : int
+    -seller_id : int
+    -garage_branch_id : int
+    -address_id : int
+    -currency_id : int
+    -order_status : string
+    -payment_status : string
+    -total_amount : decimal
+    -placed_at : datetime
+    <color:#b00>CREATED is a dead-end initial value\nabsent from the updateStatus whitelist</color>
+  }
+
+  class OrderItem {
+    -order_id : int
+    -listing_id : int
+    -quantity : int
+    -unit_price : decimal
+    -subtotal : decimal
+  }
+
+  class Delivery {
+    -order_id : int
+    -status : string = 'PREPARING'
+    -tracking_number : string
+    -delivery_provider : string
+    -delivery_address : string
+    -estimated_date : date
+    -delivered_date : datetime
+    <<PREPARING · SHIPPED · IN_TRANSIT\nDELIVERED · CANCELLED>>
+  }
+
+  class ShoppingCart {
+    -user_id : int
+    -currency_id : int
+  }
+  class CartItem {
+    -cart_id : int
+    -listing_id : int
+    -quantity : int
+  }
+  class SparePart {
+    -name : string
+    -part_number : string
+    -brand_id : int
+  }
+  class PartCategory
+  class PartBrand
+  class SellerInventory {
+    -listing_id : int
+    -quantity : int
+    -reserved : int
+  }
+  class StockMovement {
+    -listing_id : int
+    -type : string
+    -quantity : int
+    -reason : string
+  }
+
+  class PartRequest <<RelationNotFound>> {
+    -user_id : int
+    -vehicle_id : int
+    -description : text
+    -photo : string
+    -quantity : int = 1
+    -status : string = 'OPEN'
+    <color:#b00>quotes() is eager-loaded in 2\ncontrollers but is NOT DEFINED</color>
+  }
+
+  class PartQuote {
+    -request_id : int
+    -seller_id : int
+    -part_id : int
+    -price : decimal
+    -currency_id : int
+    -availability : string
+    -notes : text
+    -valid_until : date
+    -status : string = 'SENT'
+    <<SENT · ACCEPTED · REJECTED · EXPIRED\nonly SENT and ACCEPTED are written>>
+  }
+
+  class PurchaseOrder <<marketplace>> {
+    -seller_id : int
+    -supplier_id : int
+    -po_number : string <<unique>>
+    -order_date : date
+    -received_date : date
+    -total_amount : decimal
+    -status : string = 'DRAFT'
+    <<DRAFT · SENT · CONFIRMED\nSHIPPED · RECEIVED · CANCELLED>>
+  }
+  class PurchaseOrderItem <<marketplace>> {
+    -purchase_order_id : int
+    -part_id : int
+    -quantity : int
+    -unit_cost : decimal
+    -received_quantity : int
+  }
+  class Supplier {
+    -name : string
+    -email : string
+    -phone : string
+  }
+  class SellerReview
+  class PartVehicleCompatibility
+  class PartRecommendation
+}
+
+package "<<mechanics>>\napp\\Models\\Mechanics" as PMec {
+  class MechanicProfile {
+    -user_id : int
+    -type_id : int
+    -country_id : int
+    -bio : text
+    -years_experience : int
+    -rating : float
+    -verification_status : string = 'pending'
+    -availability_status : string = 'AVAILABLE'
+    <color:#b00>liveLocation()/promotions()/campaigns()\ndeclared WITHOUT importing the model\nclasses -> resolve to the wrong namespace</color>
+  }
+  class MechanicSkill
+  class MechanicSkillAssignment <<pivot>> {
+    -experience_level : string
+    -certification : string
+    -years_practiced : int
+  }
+  class MechanicCertification
+  class MechanicExperience
+  class MechanicEmployment {
+    -employment_status : string <<ONE write: 'ACTIVE'>>
+  }
+  class MechanicAvailability
+  class MechanicAssignment <<ORPHAN TABLE>> {
+    -status : string = 'ASSIGNED'
+    <color:#b00>NO WRITER; getMyAssignments()\nqueries RepairOrder instead</color>
+  }
+  class MechanicReview
+  class MechanicPerformance
+  class MechanicTool
+  class MechanicLocation
+  class MechanicServiceArea
+  class MechanicType
+  class MechanicEmergencyService <<NO WRITER>>
+  class MechanicPayment <<NO WRITER>>
+  class MechanicVerification
+}
+
+package "<<finance>>\napp\\Models\\Finance" as PFin {
+  class PaymentTransaction {
+    -payer_id : int
+    -payee_id : int
+    -amount : decimal
+    -currency_id : int
+    -payment_method_id : int
+    -reference : string <<unique>>
+    -notchpay_reference : string
+    -checkout_url : string
+    -transaction_type : string
+    -status : string = 'PENDING'
+    -paid_at : datetime
+    <<types written: MARKETPLACE · WALLET_FUNDING\ncomment: REPAIR_PAYMENT · ORDER_PAYMENT\nSUBSCRIPTION · TOP_UP · WITHDRAWAL\nREFUND · COMMISSION>>
+    <<states: PENDING · SUCCESS · FAILED>>
+  }
+  class Wallet {
+    -user_id : int
+    -currency_id : int
+    -balance : decimal
+    -status : string = 'active' <<NO TRANSITIONS>>
+  }
+  class WalletTransaction {
+    -wallet_id : int
+    -transaction_type : string
+    -amount : decimal
+    -balance_before : decimal
+    -balance_after : decimal
+    -reference : string
+    <<DEPOSIT · WITHDRAWAL — no status field>>
+  }
+  class SubscriptionPlan {
+    -name : string
+    -price : decimal
+    -duration : string
+    -features : json
+    -status : bool
+  }
+  class UserSubscription {
+    -user_id : int
+    -plan_id : int
+    -reference : string
+    -notchpay_reference : string
+    -status : string = 'pending'
+    -auto_renew : bool
+    -start_date : date
+    -end_date : date
+    <<pending · active · canceled\n(lowercase; no expiry logic)>>
+  }
+  class Invoice {
+    -customer_id : int
+    -number : string
+    -subtotal : decimal
+    -total : decimal
+  }
+  class InvoiceItem
+  class PaymentGateway
+  class PaymentMethod
+  class Refund <<NO WRITER>>
+  class WithdrawalRequest <<NO WRITER>>
+  class PlatformCommission
+  class PlatformRevenue
+  class FinancialAccount
+  class FinancialAuditLog
+  class FinancialReport
+  class BusinessExpense
+  class DiscountCoupon
+  class TaxRate
+}
+
+package "<<workflows>>\napp\\Models\\Workflows" as PWf {
+  class ServiceRequest <<NO TRANSITIONS>> {
+    -user_id : int
+    -vehicle_id : int
+    -request_type : string
+    -description : text
+    -priority : string = 'normal'
+    -location : string
+    -status : string = 'PENDING'
+  }
+  class EmergencyRequest {
+    -user_id : int
+    -vehicle_id : int
+    -branch_id : int
+    -assigned_mechanic_id : int
+    -location : string
+    -latitude : decimal
+    -longitude : decimal
+    -radius_km : decimal
+    -problem_description : text
+    -service_sheet : json
+    -estimated_cost : decimal
+    -final_cost : decimal
+    -fee_amount : decimal <<5000 CFA on late cancel>>
+    -paid_at : datetime
+    -status : string = 'REQUESTED'
+    <<written: REQUESTED · ACCEPTED · ARRIVED\nESTIMATE_PENDING · COMPLETED · CANCELLED\nread-only: ASSIGNED · IN_PROGRESS>>
+  }
+  class RepairProgress2 <<see Garages>>
+  class RepairApproval2 <<see Garages>>
+  class RepairWarranty2 <<see Garages>>
+  class LaborRecord
+  class DiagnosticMeasurement
+  class VehicleFaultCode
+}
+
+package "<<messaging>>\napp\\Models\\Messaging" as PMsg {
+  class Conversation {
+    -conversation_type : string
+    -name : string
+    -avatar : string
+    -created_by : int
+    -last_message_id : int
+    <<TYPE_PRIVATE · TYPE_GROUP · TYPE_BUSINESS>>
+  }
+  class ConversationMember <<pivot>> {
+    -role : string
+    -joined_at : datetime
+    -last_seen_message_id : int
+    -is_admin : bool
+    -notification_status : string
+  }
+  class Message {
+    -conversation_id : int
+    -sender_id : int
+    -message_type : string
+    -content : text
+    -reply_message_id : int
+    -sent_at : datetime
+    -edited_at : datetime
+    -deleted_at : datetime
+    -status : string = 'SENT'
+    <<TYPE_TEXT · TYPE_IMAGE · TYPE_VIDEO\nTYPE_AUDIO · TYPE_DOCUMENT\nTYPE_LOCATION · TYPE_SYSTEM>>
+  }
+  class MessageStatus {
+    -message_id : int
+    -user_id : int
+    -status : string
+    -timestamp : datetime
+  }
+  class MessageMedia
+  class MessageReaction
+  class VoiceMessage
+  class SharedLocation
+  class UserPresence {
+    -status : string = 'OFFLINE' <<NO WRITER>>
+    <<ONLINE · OFFLINE · BUSY>>
+  }
+  class ChatContext <<polymorphic>>
+    -context_type : string
+    -context_id : int
+  }
+  class ChatGroup
+}
+
+package "<<notifications>>\napp\\Models\\Notifications" as PNt {
+  class Notification {
+    -user_id : int
+    -type_id : int
+    -title : string
+    -message : text
+    -priority : string
+    -reference_type : string
+    -reference_id : int
+    -is_read : bool
+    -read_at : datetime
+    <<NO status field —\nreference_type: RepairOrder | Order\nEmergencyRequest | GarageAppointment\nConversation>>
+  }
+  class NotificationType
+  class NotificationPreference
+  class NotificationTemplate
+  class UserDevice {
+    -user_id : int
+    -device_token : string
+    -platform : string
+    -app_version : string
+  }
+  class PushLog <<NO WRITER>>
+  class Alert
+  class MaintenanceAlert
+  class SystemAnnouncement
+  class SystemEvent
+}
+
+package "<<maps>>\napp\\Models\\Maps" as PMap {
+  class TrackingSession {
+    -entity_type : string <<USER | MECHANIC>>
+    -entity_id : int
+    -started_by : int
+    -started_at : datetime
+    -ended_at : datetime
+    -status : string = 'active'
+    <<active · completed · cancelled>>
+  }
+  class Location <<morph>> {
+    -latitude : decimal
+    -longitude : decimal
+    -accuracy : decimal
+  }
+  class GeoPoint
+  class NavigationSession
+  class Route
+  class RoutePoint
+  class Geofence
+  class GeofenceEvent
+  class TravelEstimate
+  class TrafficSnapshot
+  class DeliveryZone
+  class DeliveryCoverage
+  class MapProvider <<DB model only —\nno vendor HTTP integration>>
+  class NearbySearch
+  class ParkingLocation
+  class RoadsideAssistance
+  class LiveLocation
+  class LocationHistory
+  class LocationShare
+  class MapLayer
+  class SearchIndexQueue
+}
+
+package "<<ai>>\napp\\Models\\AI" as PAi {
+  class AiAssistant {
+    -name : string
+    -system_prompt : text
+    -type : string
+    -status : bool
+  }
+  class AiConversation {
+    -user_id : int
+    -assistant_id : int
+    -vehicle_id : int
+  }
+  class AiMessage
+  class AiDiagnosis {
+    -vehicle_id : int
+    -symptoms : text
+    -confidence : float
+    -result : json
+  }
+  class AiProvider {
+    -name : string
+    -provider_code : string <<GEMINI · OPENAI · OPENROUTER>>
+  }
+  class AiModel {
+    -provider_id : int
+    -name : string
+    -context_window : int
+  }
+  class AiPromptTemplate
+  class AiUsageLog {
+    -tokens_used : int
+    -execution_time_ms : int
+    -estimated_cost : decimal <<HARDCODED 0.0001>>
+  }
+  class AiMemory
+  class AiContext
+  class AiPartRecommendation
+  class AiRepairSuggestion
+  class AiMaintenancePrediction
+  class AiFleetInsight
+  class AiGarageRecommendation
+}
+
+' ---------------- service-side classes that shape behaviour ---------------
+
+package "<<services>>\napp\\Services (key state writers)" as PSvc {
+
+  interface "PaymentProviderInterface" as PPI
+  interface "AIProviderInterface" as PAI2
+  interface "SearchProviderInterface" as PSI
+
+  class RepairService {
+    +createRepairOrder(data) : RepairOrder
+    +submitDiagnosis(id, data)
+    +submitEstimate(id, data)
+    +approveEstimate(id)
+    +updateStatus(id, status)
+    +completeRepair(id)
+    +performQualityCheck(id, data)
+    +generateInvoice(id)
+    +createRequest(data) : ServiceRequest
+    +addTask(id, data) : RepairTask
+    <color:#b00>#recordPayment() is CALLED by\nWeb\\RepairController:247 but\nDOES NOT EXIST -> fatal</color>
+  }
+
+  class PaymentService {
+    +initialize(data) : PaymentTransaction
+    +handleWebhook(reference, status)
+    +normalizeStatus(status) : string
+    +findByReference(ref) : PaymentTransaction
+  }
+
+  class WalletService {
+    +getWallet(user) : Wallet
+    +deposit(user, amount, ref)
+    +withdraw(user, amount, ref)
+  }
+
+  class OrderService {
+    +placeOrder(data) : Order
+    +updateStatus(order, status)
+  }
+
+  class QuoteService {
+    +submitQuote(data) : PartQuote
+    +acceptQuote(quote) : Order
+  }
+
+  class ReceptionService {
+    +completeReception(data) : VehicleCheckIn
+    <color:#b00>seeds status_history on the\nnew RepairOrder; writes the\nsignature to disk FIRST</color>
+  }
+  class WarrantyService {
+    +checkWarrantyCoverage(repair) : bool
+    +resolveClaim(claim, resolution, approvedAmount)
+    <color:#b00>checkWarrantyCoverage anchors on\nstatus=DELIVERED AND\nclosed_at > now()-6 months</color>
+  }
+  class AppointmentService {
+    +createAppointment(data) : GarageAppointment
+    +confirmAppointment(id) / +cancelAppointment(id)
+    +getAvailableSlots(branch, date)
+    <color:#b00>getAvailableSlots blocks only\n[CONFIRMED, SCHEDULED] ->\nREQUESTED/PROPOSED double-book</color>
+  }
+  class DMech <<MechanicService>> {
+    +createProfile(data) : MechanicProfile
+    +updateAvailability(...)
+    +getMyAssignments() : List
+    +listInvitations() / +acceptInvitation(id)
+    +declineInvitation(id)
+    <color:#b00>getMyAssignments queries\nRepairOrder, NOT the\nMechanicAssignment table</color>
+  }
+  class AIService {
+    +getAdapter(providerCode) : AIProviderInterface
+    +chat(prompt, model, opts) : string
+    <color:#080>fallback chain GEMINI -> OPENROUTER</color>
+  }
+
+  class GeminiAdapter
+  class OpenAIAdapter
+  class OpenRouterAdapter
+  class LocalSearchProvider
+}
+
+package "<<repositories>>\nInterface + Eloquent impl" as PRepo {
+  interface UserRepositoryInterface
+  class EloquentUserRepository
+  interface RepairRepositoryInterface
+  class EloquentRepairRepository
+  interface OrderRepositoryInterface
+  class EloquentOrderRepository
+  interface ProductRepositoryInterface
+  class EloquentProductRepository
+  interface WalletRepositoryInterface
+  class EloquentWalletRepository
+  interface MessageRepositoryInterface
+  class EloquentMessageRepository
+  interface ConversationRepositoryInterface
+  class EloquentConversationRepository
+  interface VehicleRepositoryInterface
+  class EloquentVehicleRepository
+  interface GarageRepositoryInterface
+  class EloquentGarageRepository
+  interface MechanicRepositoryInterface
+  class EloquentMechanicRepository
+  interface NotificationRepositoryInterface
+  class EloquentNotificationRepository
+  interface PaymentRepositoryInterface
+  class EloquentPaymentRepository
+  interface SubscriptionRepositoryInterface
+  class EloquentSubscriptionRepository
+}
+
+' ============================== MOBILE =====================================
+
+package "lib\\models" as PMob {
+  enum UserRole {
+    owner
+    mechanic
+    seller
+    admin
+    garageOwner
+    fleetManager
+    --
+    +fromString(s) : UserRole
+    +fromJsonList(List) : UserRole
+    +extractRoles(List) : Set
+    <color:#b00>UNREACHABLE VALUES:\n'SPARE_PART_SELLER' -> default -> owner\n'MECHANIC' -> garageOwner\nHence the seller and mechanic bottom-nav\ntab sets are dead code.</color>
+  }
+  enum ChatMessageType { text; image; video; voice; document; location; repairCard; orderCard; system }
+  enum MarketCategory { parts; cars; repairs; tuning }
+  enum ServiceType { productPresentation; repairService }
+  enum SearchCategory { maintenance; repair; parts; information }
+  enum PiistonNotificationType { alert; info; message; offer; repair; marketplace; fleet }
+  enum AppLanguage { en; fr }
+}
+
+package "lib\\services (core)" as PSmob {
+
+  class ApiService <<mixed static/instance>> {
+    {static} +baseUrl : String
+    {static} +serverRoot : String
+    {static} +isOffline : ValueNotifier<bool>
+    {static} -_serverIp = '192.168.251.219'
+    {static} -_emulatorIp = '10.0.2.2'
+    {static} -_isEmulator = false
+    {static} -_recoveryTimer : Timer
+    -_cache : OfflineCacheService
+    +getToken() : String?
+    +get(endpoint, {useCacheOnlyOnError}) : Response
+    +post(endpoint, body) : dynamic
+    +postMultipart(endpoint, fields, files) : dynamic
+    +put(endpoint, body) : dynamic
+    +patch(endpoint, body) : dynamic
+    +delete(endpoint) : dynamic
+  }
+
+  class AuthService {
+    +login(email, password) : Map
+    +register(userData) : Map
+    +getCurrentUser() : Map?
+    +isLoggedIn() : bool
+    +logout()
+    +checkEmail(email) : Map
+    +sendOtp(phone) : Map
+    +verifyOtp(code, phone) : Map
+    +forgetPassword(email) : Map
+    +changePassword(old, new)
+    +toggle2FA(enable)
+    +uploadAvatar(File)
+    +deleteAccount()
+    +signInWithGoogle/Apple/Facebook() <<STUBS>>
+    <color:#b00>verifyOtp():\nif (code == '123456') return {success:true}\nDEV BACKDOOR SHIPS IN RELEASE</color>
+  }
+
+  class OfflineCacheService {
+    -_prefix = 'piiston_cache_'
+    +cacheData(key, data)
+    +getCachedData(key) : Map?
+    +clearCache()
+  }
+
+  class MessagingService <<singleton>> {
+    +pusher : PusherChannelsFlutter
+    -_isPusherInitialized : bool
+    +getMessageStream(conversationId) : Stream<List<ChatMessage>>
+    +getConversations() : List<ChatConversation>
+    +getMessages(id) : List<ChatMessage>
+    +sendMessage(id, content)
+    +sendMediaMessage(id, file, type)
+    +startConversation(participantId, {contextType, contextId})
+    +markAsRead(id)
+    +initiateCall(id, isVideo)
+    -_initPusher()
+    -_getCurrentUserId() : int
+    <color:#b00>apiKey 'mzpjoryoi4qtn7enzlzl'\nHARDCODED, useTLS: false</color>
+  }
+
+  class CallService <<singleton>> {
+    +currentSession : ValueNotifier<CallSession?>
+    +incomingCall : ValueNotifier<CallSession?>
+    +durationSeconds : ValueNotifier<int>
+    +startCall(conversation, isVideo)
+    +receiveCall(conversation, isVideo)
+    +acceptCall()
+    +declineCall()
+    +endCall()
+  }
+
+  class CallSession <<value object>> {
+    +conversation : ChatConversation
+    +isVideo : bool
+    +startTime : DateTime
+  }
+
+  class NotificationHandler <<singleton>> {
+    +handleNotificationTap(payload)
+  }
+
+  class PushNotificationService <<singleton>> {
+    +initialize()
+    -_showLocalNotification(...)
+    -_handleDataTap(message)
+  }
+
+  class WorkflowService {
+    +getMyServiceRequests() : List
+    +createServiceRequest(data) : Map
+    +getRepairProgress(roId) : List
+    +submitDiagnosis(roId, data)
+    +submitEstimate(roId, data)
+    +approveEstimate(roId)
+    +completeRepair(roId)
+  }
+
+  class EmergencyService {
+    +getMyRequests() : List
+    +getActiveRequest() : Map?
+    +requestHelp(data) : Map
+    +acceptRequest(id, branchId) : Map
+    +markAsArrived(id) : Map
+    +completeRequest(id) : Map
+    +declineRequest(id) : Map
+    +updateLiveLocation(requestId, lat, lng) : void
+    +submitServiceSheet(id, data) : Map
+    +approveEstimate(id) : Map
+    +cancelRequest(id) : Map
+  }
+
+  class AppointmentService {
+    +getMyAppointments() : List
+    +getBranchServices(branchId) : List
+    +bookAppointment(data) : Map
+    +confirmAppointment(id) : Map
+    +cancelAppointment(id) : Map
+    +reproposeAppointment(id, DateTime) : Map
+  }
+
+  class MarketplaceServiceMob {
+    +getListings({categoryId, query, vehicleId, page}) : List<MarketItem>
+    +getProduct(id) : MarketItem
+    +getCategories() / +getBrands()
+    +addToCart(listingId, qty) / +updateCartQuantity(itemId, qty)
+    +removeFromCart(itemId) / +getCart() : Cart
+    +getMyOrders() / +placeOrder(data)
+    +createProduct(data) / +updateProduct(id, data)
+    +getSellerStats() / +updateOrderStatus(id, status)
+    +createPartRequest(data) / +getServicesFeed()
+    +toggleLike(id, type) / +getComments(...) / +postComment(...)
+    +getStoreDetails(id)
+  }
+  class VehicleServiceMob {
+    +getMyVehicles() : List
+    +addVehicle(data, File?) / +updateMileage(id, mileage)
+    +getVehicleDocuments(id) / +deleteDocument(id)
+    +getVehicleByVin(vin) : Map?
+  }
+  class VehicleCatalogServiceMob {
+    +getBrands() / +getModels(brand)
+    +getFuelTypes() / +getTransmissions()
+  }
+  class MaintenanceServiceMob {
+    +getVehicleMaintenances(vehicleId) / +addMaintenance(...) / +deleteMaintenance(id)
+  }
+  class ReminderServiceMob {
+    +getMaintenanceAlerts() / +updateAlertStatus(id, status)
+  }
+  class FinanceServiceMob {
+    +getWalletBalance() / +getWalletHistory()
+    +getPaymentMethods() / +getTransactions()
+  }
+  class WarrantyServiceMob {
+    +getMyWarranties() : List
+  }
+  class AiSuggestionService {
+    +getSmartSuggestions() : List
+    <color:#b00>bypasses ApiService entirely:\nreads auth_token itself</color>
+  }
+  class SellerService {
+    +getDashboardStats() : SellerDashboardStats
+    +getProducts() / +createProduct(...) / +updateProduct(...)
+    +deleteProduct(id)
+    +getOrders() / +updateOrderStatus(id, status)
+    +getSuppliers() / +createSupplier() / +updateSupplier() / +deleteSupplier()
+    +getPurchaseOrders() / +getB2BRequests() / +submitQuote(id, data)
+    +getQuoteHistory() / +getSalesAnalytics(period)
+    +getFinanceSummary() / +getPromotions() / +createPromotion()
+    +getReviews() / +getCustomers() / +getDeliveries()
+    +updateDeliveryStatus(id, status)
+    +aiIdentifyPart(photoBase64) : Map
+    +aiGenerateDescription(name, brand) : Map
+    +completeOnboarding(data) / +updateProfile(data)
+  }
+
+  class PaymentServiceMob {
+    +initializePayment({amount, paymentMethodId,\n  transactionType, currencyId,\n  referenceId, phone, channel}) : Map?
+    +verifyPayment(reference) : Map?
+  }
+
+  class AiServiceMob {
+    +getAssistants() / +getConversations()
+    +startAiConversation(assistantId)
+    +sendChatMessage(convId, message, {vehicleId})
+    +getDiagnosis(vehicleId, symptoms,\n  {dtcCode, image})
+    <color:#080>the ONLY service that RETHROWS\ninstead of returning a fallback</color>
+  }
+
+  class ChatConversation <<DTO>> {
+    +id : int
+    +type : String
+    +peerName : String
+    +lastMessage : String
+    +lastMessageAt : DateTime
+    +unreadCount : int
+    +fromJson(Map) : ChatConversation
+  }
+  class ChatMessage <<DTO>> {
+    +id : int
+    +conversationId : int
+    +senderId : int
+    +type : ChatMessageType
+    +content : String
+    +sentAt : DateTime
+    +isMine : bool
+    +fromJson(Map, currentUserId) : ChatMessage
+  }
+  class MarketItem <<DTO>> {
+    +id : int
+    +name : String
+    +price : num
+    +currency : String
+    +imageUrl : String
+    +category : MarketCategory
+    +sellerName : String
+    +isLiked : bool
+  }
+  class SellerOrder <<DTO>> {
+    +id : int
+    +orderNumber : String
+    +buyerName : String
+    +total : num
+    +orderStatus : String
+    +createdAt : DateTime
+  }
+  class NotificationItem <<DTO>> {
+    +id : int
+    +type : PiistonNotificationType
+    +title : String
+    +body : String
+    +isRead : bool
+    +referenceType : String
+  }
+
+  class NavigationService <<all static>> {
+    {static} +initialTargetRoute : String?
+    {static} +currentRoute : ValueNotifier<String?>
+    {static} +saveLastRoute(route)
+    {static} +getLastRoute() : String?
+    {static} +clearLastRoute()
+  }
+
+  class AppRouteObserver <<RouteObserver>>
+  class LocalizationService <<singleton>>
+  class ThemeService <<singleton>>
+  class BiometricService
+  class MediaService
+  class VoiceService <<singleton>>
+}
+
+package "lib (root + pages)" as PPage {
+  class Piiston <<root widget>> {
+    +build() : MaterialApp
+  }
+  class PiistonRoutes <<constants>> {
+    <<84 named route strings>>\n/loading · /welcome · /login · /register\n/verify-phone · /role-selection\n/home · /profile · /dashboard-page\n/workflow/* (11) · /seller/* (16)\n/profile/* (18) · /status/* · /call
+  }
+  class Home <<role bottom nav>> {
+    -_currentIndex : int
+    -_role : UserRole
+    -_isLoading : bool
+    -_cachedPages : List<Widget>
+    -_loadUserRole()
+    -_getPages() : List<Widget>
+    -_getNavItems() : List<NavItemData>
+    -_onTabTapped(int)
+  }
+  class DashboardPage <<role switch>> {
+    -_role : UserRole
+    -_stat1.._stat4 : String
+    -_tryLoadFromCache()
+    -_loadDashboardData()
+    -_fetchRemainingData()
+    -_buildRoleDashboard(bool) : Widget
+  }
+  class OwnerDashboard
+  class MechanicDashboard <<10s SOS poll>>
+  class SellerDashboard
+  class ServiceRequestWizardPage
+  class BookingFlowPage
+  class RepairTrackingPage
+  class QuoteComparisonPage
+  class SosLiveTrackingPage
+  class SOSInterventionFormPage
+  class MechanicEmergencyHubPage
+  class EmergencyAssistancePage <<5s poll + geolocator>>
+  class VinScanPage
+  class PartRequestCreationPage
+  class GarageExplorePage <<5s SOS timer>>
+  class GarageProfilePage
+  class GarageReviewPage
+  class SellerOrdersPage
+  class SellerProductsPage
+  class SellerMoreMenuPage
+  class ChatDetailPage
+  class CallPage
+  class IncomingCallPage
+  class PaymentGatewayPage
+  class CheckoutPage
+  class Login
+  class Register
+  class PhoneVerification <<_isOtpSent>>
+  class RoleSelection
+  class PageTemplate <<design system>>
+  class NavBar <<design system>>
+}
+
+package "<<platform>>\nFlutter platform adapters" as PPlat {
+  class "FlutterSecureStorage" as DToken2 {
+    <<key: auth_token>>
+  }
+  class "SharedPreferences" as Prefs2 {
+    <<last_home_index · last_route\ntheme_mode · language_code\nbiometrics_enabled · piiston_cache_*>>
+  }
+  class "pusher_channels_flutter" as PusherC {
+    <<apiKey hardcoded\nuseTLS: false>>
+  }
+  class "firebase_messaging" as FcmC
+  class "flutter_local_notifications" as LNotifC
+  class "geolocator + flutter_map" as GeoC
+  class "local_auth" as LAuthC
+  class "speech_to_text" as SttC
+  class "http" as HttpC
+}
+
+' ============================ RELATIONSHIPS ================================
+
+' --- Identity core ---
+User "1" *-- "0..*" Role : roles (pivot user_roles)
+Role "0..*" -- "0..*" Permission : <<many-to-many>>
+User "1" *-- "0..1" Device : <<HasApiTokens>>
+User "1" *-- "0..*" UserAddress
+User "1" *-- "0..1" UserPreference
+User "1" -- "0..*" UserActivity
+
+' --- Vehicles ---
+User "1" o-- "0..*" Vehicle : owns
+Vehicle "0..*" --> "1" VehicleBrand
+Vehicle "0..*" --> "1" VehicleModel
+Vehicle "0..*" --> "0..1" VehicleGeneration
+Vehicle "0..*" --> "0..1" FuelType
+Vehicle "0..*" --> "0..1" Transmission
+Vehicle "1" *-- "0..*" VehicleMaintenance
+Vehicle "1" *-- "0..*" VehicleDocument
+Vehicle "1" *-- "0..1" VehicleHealth
+Vehicle "1" *-- "0..*" VehicleOwnership
+Vehicle "1" *-- "0..*" VehicleImage
+Vehicle "1" *-- "0..*" VehicleUsageLog
+Vehicle "1" *-- "0..*" UserActivity : subject
+
+' --- Garages ---
+User "1" o-- "0..*" GarageCompany : owner_id
+GarageCompany "1" *-- "1..*" GarageBranch : branches
+GarageBranch "1" o-- "0..1" User : manager_id <<AUTHORIZATION KEY>>
+GarageBranch "1" *-- "0..*" GarageEmployee
+GarageBranch "1" *-- "0..*" GarageService
+GarageBranch "1" *-- "0..*" WorkshopBay
+GarageBranch "1" *-- "0..*" GarageInventory
+GarageBranch "1" *-- "0..*" GarageCustomer
+GarageBranch "1" *-- "0..*" RepairOrder
+GarageBranch "1" *-- "0..*" PurchaseOrderItem : <<BROKEN ref>>
+GarageCompany "1" -- "0..*" GarageSupplier
+GarageCompany "1" -- "0..*" GarageReview
+GarageCompany "1" -- "0..1" GarageSubscription
+
+' --- Repair work order graph ---
+GarageAppointment "0..1" --> "0..1" VehicleCheckIn : appointment_id
+VehicleCheckIn "0..1" --> "0..1" RepairOrder : check_in_id
+GarageAppointment "0..1" --> "0..*" RepairOrder : appointment_id
+ServiceRequest "0..1" --> "0..1" GarageAppointment : request_id <<HasOne>>
+ServiceRequest "0..1" --> "0..1" RepairOrder : <<hasOneThrough>>
+RepairOrder "0..*" -- "1" Vehicle : vehicle_id
+RepairOrder "0..*" -- "0..1" GarageCustomer : garageCustomer() <<customer_id>>
+RepairOrder "0..*" -- "0..1" User : mechanic <<assigned_mechanic_id>>
+RepairOrder "0..*" -- "0..1" WorkshopBay : bay
+RepairOrder "1" *-- "0..1" VehicleDiagnosis
+RepairOrder "1" *-- "0..1" RepairEstimate
+RepairOrder "1" *-- "0..*" RepairTask
+RepairOrder "1" *-- "0..*" RepairProgress
+RepairOrder "1" *-- "0..*" RepairPartUsage
+RepairOrder "1" *-- "0..*" RepairApproval
+RepairOrder "1" *-- "0..1" QualityCheck
+RepairOrder "1" *-- "0..1" VehicleDelivery
+RepairOrder "1" *-- "0..1" GarageInvoice
+RepairOrder "1" -- "0..1" RepairWarranty
+RepairOrder "1" -- "0..*" WarrantyClaim
+RepairOrder "1" *-- "0..*" GarageMedia : <<morph>>
+RepairEstimate "0..*" -- "0..1" User : creator
+RepairApproval "0..*" -- "0..1" RepairTask
+
+' --- Marketplace ---
+User "1" o-- "0..1" SellerProfile
+SellerProfile "1" *-- "0..*" ProductListing : listings
+ProductListing "0..*" --> "1" SparePart : part_id
+ProductListing "1" *-- "0..1" SellerInventory
+ProductListing "1" *-- "0..*" StockMovement
+ProductListing "1" -- "0..*" SocialInteraction <<morph>>
+
+User "1" o-- "0..*" Order : buyer_id
+SellerProfile "1" o-- "0..*" Order : seller_id
+GarageBranch "0..1" o-- "0..*" Order : garage_branch_id
+Order "1" *-- "1..*" OrderItem
+Order "1" *-- "0..1" Delivery : <<CASCADE: DELIVERED>>
+OrderItem "0..*" --> "1" ProductListing : listing_id
+
+User "1" o-- "0..*" PartRequest
+Vehicle "0..1" o-- "0..*" PartRequest
+PartRequest "1" o-- "0..*" PartQuote : <<quotes() MISSING>>
+SellerProfile "1" o-- "0..*" PartQuote
+SparePart "0..1" o-- "0..*" PartQuote
+PartRequest "1" -- "0..*" Order : created by acceptQuote
+
+SellerProfile "1" o-- "0..*" PurchaseOrder : <<marketplace>>
+Supplier "1" o-- "0..*" PurchaseOrder
+PurchaseOrder "1" *-- "1..*" PurchaseOrderItem
+PurchaseOrderItem "0..*" --> "0..1" SparePart
+PurchaseOrder "1" -- "0..*" ProductListing : <<receive() → recordMovement>>
+
+' --- Mechanics ---
+User "1" o-- "0..1" MechanicProfile
+MechanicProfile "0..*" -- "0..1" MechanicType
+MechanicProfile "0..*" -- "0..*" MechanicSkill : <<pivot: MechanicSkillAssignment>>
+MechanicProfile "1" *-- "0..*" MechanicCertification
+MechanicProfile "1" *-- "0..*" MechanicExperience
+MechanicProfile "1" *-- "0..*" MechanicEmployment
+MechanicProfile "1" *-- "0..*" MechanicAvailability
+MechanicProfile "1" *-- "0..*" MechanicServiceArea
+MechanicProfile "1" *-- "0..*" MechanicTool
+MechanicProfile "1" *-- "0..*" MechanicReview
+MechanicProfile "1" *-- "0..*" MechanicPerformance
+MechanicProfile "1" *-- "0..*" MechanicEmergencyService
+MechanicProfile "0..1" -- "0..1" MechanicLocation
+MechanicProfile "1" -- "0..*" MechanicAssignment : <<ORPHAN>>
+GarageBranch "1" o-- "0..*" GarageInvitation
+User "0..1" o-- "0..*" GarageInvitation : user_id
+GarageInvitation "0..1" ..> "0..1" GarageEmployee : <<accepted_at not null>>
+GarageInvitation "0..1" ..> "0..1" MechanicEmployment : <<same txn>>
+User "1" -- "0..*" RepairOrder : <<REAL assignment>>
+
+' --- Finance ---
+User "1" o-- "0..1" Wallet
+Wallet "1" *-- "0..*" WalletTransaction
+User "1" o-- "0..*" PaymentTransaction : payer_id
+User "0..1" o-- "0..*" PaymentTransaction : payee_id
+PaymentTransaction "0..1" -- "0..1" PlatformCommission
+User "1" o-- "0..1" ShoppingCart
+ShoppingCart "1" *-- "0..*" CartItem
+User "1" o-- "0..1" UserSubscription
+SubscriptionPlan "1" o-- "0..*" UserSubscription
+User "1" o-- "0..*" Invoice
+PaymentMethod "1" o-- "0..*" PaymentTransaction
+PaymentTransaction "1" -- "0..1" Refund : <<NO WRITER>>
+Wallet "1" -- "0..*" WithdrawalRequest : <<NO WRITER, BYPASSED>>
+
+' --- Workflows / SOS ---
+User "1" o-- "0..*" ServiceRequest
+Vehicle "0..1" o-- "0..*" ServiceRequest
+User "1" o-- "0..*" EmergencyRequest
+Vehicle "0..1" o-- "0..*" EmergencyRequest
+GarageBranch "0..1" o-- "0..*" EmergencyRequest : branch_id
+User "0..1" o-- "0..*" EmergencyRequest : mechanic <<assigned_mechanic_id>>
+EmergencyRequest "1" -- "0..1" TrackingSession : <<USER side>>
+EmergencyRequest "1" -- "0..1" TrackingSession : <<MECHANIC side>>
+User "1" o-- "0..*" Accident : <<Fleets\Accident\ntable vehicle_accidents>>
+Vehicle "0..1" o-- "0..*" Accident
+Vehicle "1" *-- "0..*" Insurance
+
+' --- Messaging ---
+User "1" o-- "0..*" Conversation : created_by
+Conversation "0..*" -- "0..*" User : participants <<pivot ConversationMember>>
+Conversation "1" *-- "0..*" Message
+Conversation "1" -- "0..1" Message : last_message_id
+Message "0..*" -- "1" User : sender_id
+Message "0..*" -- "0..1" Message : reply_message_id
+Message "1" *-- "0..*" MessageMedia
+Message "1" *-- "0..*" MessageReaction
+Message "1" *-- "0..*" MessageStatus : <<per-recipient machine>>
+Conversation "1" *-- "0..*" ChatContext : <<binds a chat to a\nrepair / listing / vehicle>>
+User "1" o-- "0..1" UserPresence
+
+' --- Notifications ---
+User "1" o-- "0..*" Notification
+NotificationType "1" o-- "0..*" Notification
+Notification "1" *-- "0..*" PushLog
+User "1" o-- "0..*" NotificationPreference
+User "1" o-- "0..*" UserDevice
+Notification "0..*" ..> "0..1" RepairOrder : <<reference_type/id>>
+Notification "0..*" ..> "0..1" Order : <<reference_type/id>>
+Notification "0..*" ..> "0..1" EmergencyRequest : <<reference_type/id>>
+Notification "0..*" ..> "0..1" GarageAppointment : <<reference_type/id>>
+Notification "0..*" ..> "0..1" Conversation : <<reference_type/id>>
+
+' --- Maps ---
+User "1" o-- "0..1" Location : <<morph entity>>
+MechanicProfile "1" o-- "0..1" Location : <<morph entity>>
+GarageBranch "1" o-- "0..1" Location : <<morph entity>>
+TrackingSession "0..*" --> "1" User : started_by
+TrackingSession "1" -- "0..*" GeoPoint
+Location "1" *-- "0..*" LocationHistory
+Route "1" *-- "1..*" RoutePoint
+Geofence "1" *-- "0..*" GeofenceEvent
+
+' --- AI ---
+User "1" o-- "0..*" AiConversation
+AiAssistant "1" o-- "0..*" AiConversation
+Vehicle "0..1" o-- "0..*" AiConversation : <<makes it vehicle-aware>>
+AiConversation "1" *-- "0..*" AiMessage
+User "1" o-- "0..*" AiDiagnosis
+Vehicle "1" o-- "0..*" AiDiagnosis
+AiProvider "1" o-- "0..*" AiModel
+AiModel "1" o-- "0..*" AiUsageLog
+User "1" o-- "0..*" AiUsageLog
+User "1" o-- "0..*" AiMemory
+AiPromptTemplate "0..*" ..> "0..1" AiAssistant
+
+' --- services to models ---
+RepairService ..> RepairOrder
+RepairService ..> RepairEstimate
+RepairService ..> RepairTask
+RepairService ..> VehicleDiagnosis
+RepairService ..> QualityCheck
+RepairService ..> GarageInvoice
+RepairService ..> ServiceRequest
+RepairService ..> VehicleMaintenance : <<calls the missing\nVehicle::maintenances()>>
+ReceptionService ..> VehicleCheckIn
+WarrantyService ..> WarrantyClaim
+AppointmentService ..> GarageAppointment
+OrderService ..> Order
+OrderService ..> OrderItem
+QuoteService ..> PartQuote
+QuoteService ..> PartRequest
+QuoteService ..> Order
+DMech ..> RepairOrder : <<getMyAssignments>>
+PaymentService ..> PaymentTransaction
+PaymentService ..> WalletService : <<WALLET_FUNDING>>
+PaymentService ..> PPI
+WalletService ..> Wallet
+WalletService ..> WalletTransaction
+AIService ..> PAI2
+GeminiAdapter ..|> PAI2
+OpenAIAdapter ..|> PAI2
+OpenRouterAdapter ..|> PAI2
+AIService ..> AiUsageLog
+LocalSearchProvider ..|> PSI
+GeminiAdapter ..> AiProvider
+OpenAIAdapter ..> AiProvider
+OpenRouterAdapter ..> AiProvider
+
+' --- repositories ---
+EloquentUserRepository ..|> UserRepositoryInterface
+EloquentRepairRepository ..|> RepairRepositoryInterface
+EloquentOrderRepository ..|> OrderRepositoryInterface
+EloquentProductRepository ..|> ProductRepositoryInterface
+EloquentWalletRepository ..|> WalletRepositoryInterface
+EloquentMessageRepository ..|> MessageRepositoryInterface
+EloquentConversationRepository ..|> ConversationRepositoryInterface
+EloquentVehicleRepository ..|> VehicleRepositoryInterface
+EloquentGarageRepository ..|> GarageRepositoryInterface
+EloquentMechanicRepository ..|> MechanicRepositoryInterface
+EloquentNotificationRepository ..|> NotificationRepositoryInterface
+EloquentPaymentRepository ..|> PaymentRepositoryInterface
+EloquentSubscriptionRepository ..|> SubscriptionRepositoryInterface
+EloquentUserRepository ..> User
+EloquentRepairRepository ..> RepairOrder
+EloquentOrderRepository ..> Order
+EloquentWalletRepository ..> Wallet
+EloquentMessageRepository ..> Message
+EloquentVehicleRepository ..> Vehicle
+EloquentGarageRepository ..> GarageCompany
+EloquentMechanicRepository ..> MechanicProfile
+EloquentNotificationRepository ..> Notification
+EloquentPaymentRepository ..> PaymentTransaction
+EloquentSubscriptionRepository ..> UserSubscription
+EloquentProductRepository ..> ProductListing
+EloquentConversationRepository ..> Conversation
+
+' --- mobile classes ---
+AuthService --> ApiService : uses
+WorkflowService --> ApiService
+EmergencyService --> ApiService
+AppointmentService --> ApiService
+SellerService --> ApiService
+PaymentServiceMob --> ApiService
+AiServiceMob --> ApiService
+MarketplaceServiceMob --> ApiService
+VehicleServiceMob --> ApiService
+VehicleCatalogServiceMob --> ApiService
+MaintenanceServiceMob --> ApiService
+ReminderServiceMob --> ApiService
+FinanceServiceMob --> ApiService
+WarrantyServiceMob --> ApiService
+AiSuggestionService ..> DToken2
+MarketplaceServiceMob ..> MarketItem
+SellerService ..> SellerOrder
+MarketplaceServiceMob --> MarketItem
+MarketItem ..> MarketCategory
+ChatMessage ..> ChatMessageType
+NotificationItem ..> PiistonNotificationType
+ApiService --> OfflineCacheService
+ApiService ..> DToken2 : <<FlutterSecureStorage auth_token>>
+AuthService ..> DToken2
+MessagingService --> ApiService
+MessagingService ..> PusherC : pusher_channels_flutter
+MessagingService --> ChatConversation
+MessagingService --> ChatMessage
+CallService *-- CallSession
+CallService ..> ChatConversation
+PushNotificationService ..> FcmC : firebase_messaging
+PushNotificationService --> NotificationHandler
+NotificationHandler ..> NavigationService : navigatorKey
+NavigationService ..> Prefs2 : last_route
+OfflineCacheService ..> Prefs2 : piiston_cache_*
+BiometricService ..> Prefs2 : biometrics_enabled
+ThemeService ..> Prefs2 : theme_mode
+LocalizationService ..> Prefs2 : language_code
+Piiston --> PiistonRoutes : initialRoute / appRoutes
+Piiston ..> PushNotificationService
+Piiston ..> NavigationService
+Piiston --> Home
+Home --> DashboardPage
+Home ..> NavigationService : last_home_index
+Home ..> Prefs2
+DashboardPage ..> UserRole
+DashboardPage ..> NotificationItem
+DashboardPage --> OwnerDashboard
+DashboardPage --> MechanicDashboard
+DashboardPage --> SellerDashboard
+OwnerDashboard ..> PageTemplate
+MechanicDashboard ..> PageTemplate
+SellerDashboard ..> PageTemplate
+MechanicDashboard ..> EmergencyService
+MechanicDashboard --> MechanicEmergencyHubPage
+SosLiveTrackingPage --> EmergencyService
+SOSInterventionFormPage --> EmergencyService
+MechanicEmergencyHubPage --> EmergencyService
+EmergencyAssistancePage --> EmergencyService
+EmergencyAssistancePage ..> GeoC
+GarageExplorePage ..> GeoC
+GarageExplorePage ..> EmergencyService
+BookingFlowPage --> AppointmentService
+ServiceRequestWizardPage --> WorkflowService
+RepairTrackingPage --> WorkflowService
+RepairTrackingPage --> PaymentServiceMob
+PartRequestCreationPage --> MarketplaceServiceMob
+QuoteComparisonPage --> MarketplaceServiceMob
+SellerOrdersPage --> SellerService
+SellerMoreMenuPage --> SellerService
+SellerProductsPage ..> SellerService
+ChatDetailPage --> MessagingService
+CallPage ..> CallService
+IncomingCallPage ..> CallService
+PaymentGatewayPage --> PaymentServiceMob
+CheckoutPage --> FinanceServiceMob
+Login --> AuthService
+Register --> AuthService
+PhoneVerification --> AuthService
+RoleSelection --> AuthService
+PhoneVerification ..> UserRole : forwards
+RoleSelection --> UserRole
+VinScanPage --> VehicleServiceMob
+
+MessagingService --> ChatConversation
+MessagingService --> ChatMessage
+MessagingService ..> PusherC
+MessagingService ..> HttpC
+CallService *-- CallSession
+CallService --> ChatConversation
+PushNotificationService ..> FcmC
+PushNotificationService ..> LNotifC
+PushNotificationService --> NotificationHandler
+NotificationHandler ..> NavigationService : navigatorKey
+NavigationService ..> Prefs2 : last_route
+OfflineCacheService ..> Prefs2 : piiston_cache_*
+BiometricService ..> Prefs2
+BiometricService ..> LAuthC
+ThemeService ..> Prefs2
+LocalizationService ..> Prefs2
+VoiceService ..> SttC
+MediaService ..> GeoC
+ApiService ..> DToken2
+AuthService ..> DToken2
+AuthService ..> OfflineCacheService
+ApiService --> HttpC
+
+@enduml

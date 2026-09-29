@@ -2,6 +2,7 @@
 
 namespace App\Models\Garages;
 
+use App\Concerns\NormalizesBooleanStatus;
 use App\Models\Globalization\Address;
 use App\Models\Maps\Location;
 use App\Models\User;
@@ -12,6 +13,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class GarageBranch extends Model
 {
+    use NormalizesBooleanStatus;
+
     protected $fillable = [
         'company_id', 'address_id', 'manager_id', 'name', 'logo_path', 'cover_path',
         'phone', 'email', 'opening_date', 'status', 'business_hours', 'social_links',

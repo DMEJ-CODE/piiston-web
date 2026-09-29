@@ -1,14 +1,14 @@
 <div class="flex flex-col gap-2 pb-8">
     <x-admin.index-header
-        title="Modération"
-        subtitle="Gestion du contenu et comportements plateforme"
+        title="Moderation"
+        subtitle="Platform content and behavior management"
         searchModel="search"
-        searchPlaceholder="Raison ou description..."
+        searchPlaceholder="Reason or description..."
     />
 
     <!-- Status Filters Bar -->
     <div class="mb-6 flex flex-wrap gap-2">
-        @foreach(['' => 'Tous', 'open' => 'Ouverts', 'under_review' => 'En examen', 'resolved' => 'Résolus', 'appealed' => 'Appels'] as $val => $label)
+        @foreach(['' => 'All', 'open' => 'Open', 'under_review' => 'Under Review', 'resolved' => 'Resolved', 'appealed' => 'Appeals'] as $val => $label)
             <button
                 wire:click="$set('status', '{{ $val }}')"
                 class="px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all {{ $status === $val ? 'bg-zinc-900 text-white dark:bg-white dark:text-zinc-900 shadow-lg' : 'bg-[var(--surface)] text-zinc-500 hover:bg-zinc-50 dark:hover:bg-white/5 border border-zinc-100 dark:border-white/5' }}"
@@ -23,9 +23,9 @@
             <table class="w-full text-left">
                 <thead>
                     <tr class="text-left border-b border-zinc-50 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
-                        <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Motif du Cas</th>
-                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Type de Contenu</th>
-                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Statut</th>
+                        <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Case Reason</th>
+                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Content Type</th>
+                        <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Status</th>
                         <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Date</th>
                         <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Actions</th>
                     </tr>
@@ -65,8 +65,8 @@
                                 <flux:dropdown>
                                     <flux:button size="xs" variant="ghost" icon="ellipsis-vertical" class="rounded-lg" />
                                     <flux:menu class="min-w-[180px] rounded-xl p-1 shadow-xl">
-                                        <flux:menu.item wire:click="updateCaseStatus({{ $case->id }}, 'under_review')" icon="eye" class="rounded-lg font-bold text-[10px] uppercase">Examiner</flux:menu.item>
-                                        <flux:menu.item wire:click="updateCaseStatus({{ $case->id }}, 'resolved')" icon="check" class="rounded-lg font-bold text-[10px] uppercase">Résoudre</flux:menu.item>
+                                        <flux:menu.item wire:click="updateCaseStatus({{ $case->id }}, 'under_review')" icon="eye" class="rounded-lg font-bold text-[10px] uppercase">Review</flux:menu.item>
+                                        <flux:menu.item wire:click="updateCaseStatus({{ $case->id }}, 'resolved')" icon="check" class="rounded-lg font-bold text-[10px] uppercase">Resolve</flux:menu.item>
                                     </flux:menu>
                                 </flux:dropdown>
                             </td>
@@ -76,7 +76,7 @@
                             <td colspan="5" class="py-12 text-center">
                                 <div class="flex flex-col items-center justify-center">
                                     <i class="hgi-stroke hgi-flag-01 text-3xl text-zinc-200 dark:text-zinc-700 mb-2"></i>
-                                    <p class="text-[10px] font-black text-zinc-400 uppercase">Aucun cas de modération trouvé</p>
+                                    <p class="text-[10px] font-black text-zinc-400 uppercase">No moderation case found</p>
                                 </div>
                             </td>
                         </tr>

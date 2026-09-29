@@ -2,50 +2,56 @@
 
 use App\Livewire\Admin\AdministratorsManagement;
 use App\Livewire\Admin\AdminRoles;
+use App\Livewire\Admin\ApplicationErrors;
 use App\Livewire\Admin\AuditLogs;
 use App\Livewire\Admin\CMSPages;
 use App\Livewire\Admin\Dashboard;
 use App\Livewire\Admin\FeatureFlags;
 use App\Livewire\Admin\FraudCases;
+use App\Livewire\Admin\GarageSubscriptions;
 use App\Livewire\Admin\ModerationCases;
 use App\Livewire\Admin\Permissions;
 use App\Livewire\Admin\PlatformReports;
 use App\Livewire\Admin\SystemSettings;
 use App\Livewire\Admin\UserManagement;
+use App\Livewire\Messaging\ChatCenter;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'verified', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     // Dashboard
-    Route::livewire('/', Dashboard::class)->name('dashboard');
+    Route::get('/', Dashboard::class)->name('dashboard');
 
     // Administrators Management
-    Route::livewire('/administrators', AdministratorsManagement::class)->name('administrators');
+    Route::get('/administrators', AdministratorsManagement::class)->name('administrators');
 
     // Admin Roles
-    Route::livewire('/roles', AdminRoles::class)->name('roles');
+    Route::get('/roles', AdminRoles::class)->name('roles');
 
     // Permissions
-    Route::livewire('/permissions', Permissions::class)->name('permissions');
+    Route::get('/permissions', Permissions::class)->name('permissions');
 
     // Users Management
-    Route::livewire('/users', UserManagement::class)->name('users');
+    Route::get('/users', UserManagement::class)->name('users');
 
     // System Settings
-    Route::livewire('/settings', SystemSettings::class)->name('settings');
+    Route::get('/settings', SystemSettings::class)->name('settings');
 
     // Audit Logs
-    Route::livewire('/audit-logs', AuditLogs::class)->name('audit-logs');
+    Route::get('/audit-logs', AuditLogs::class)->name('audit-logs');
+    Route::get('/application-errors', ApplicationErrors::class)->name('application-errors');
 
     // CMS Pages
-    Route::livewire('/cms-pages', CMSPages::class)->name('cms-pages');
+    Route::get('/cms-pages', CMSPages::class)->name('cms-pages');
 
     // Platform Reports & Moderation
-    Route::livewire('/reports', PlatformReports::class)->name('reports');
-    Route::livewire('/moderation', ModerationCases::class)->name('moderation');
+    Route::get('/reports', PlatformReports::class)->name('reports');
+    Route::get('/moderation', ModerationCases::class)->name('moderation');
 
     // Fraud Detection
-    Route::livewire('/fraud-cases', FraudCases::class)->name('fraud-cases');
+    Route::get('/fraud-cases', FraudCases::class)->name('fraud-cases');
 
     // Feature Flags
-    Route::livewire('/feature-flags', FeatureFlags::class)->name('feature-flags');
+    Route::get('/feature-flags', FeatureFlags::class)->name('feature-flags');
+    Route::get('/garage-subscriptions', GarageSubscriptions::class)->name('garage-subscriptions');
+    Route::get('/messages/{conversationId?}', ChatCenter::class)->name('messages.index');
 });

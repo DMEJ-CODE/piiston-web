@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Modifier le diagnostic')">
+<x-layouts::app :title="__('garage.Modifier le diagnostic')">
     <flux:heading size="xl">Modifier le diagnostic</flux:heading>
     <flux:text class="mt-2">Modifier le diagnostic #{{ $diagnosis->id }}.</flux:text>
 

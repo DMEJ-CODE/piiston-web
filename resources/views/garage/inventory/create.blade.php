@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Nouvelle Pièce')">
+<x-layouts::app :title="__('garage.Nouvelle Pièce')">
     <div class="max-w-4xl mx-auto py-6">
         <div class="flex items-center justify-between mb-8">
             <div>

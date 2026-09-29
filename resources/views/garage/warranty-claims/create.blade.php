@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Nouvelle réclamation garantie')">
+<x-layouts::app :title="__('garage.Nouvelle réclamation garantie')">
     <flux:heading size="xl">Nouvelle réclamation garantie</flux:heading>
     <flux:text class="mt-2">Créer une réclamation pour {{ $branch->name }}.</flux:text>
 

@@ -3,7 +3,7 @@
         <flux:avatar :user="auth()->user()" size="xs" class="rounded-lg shadow-sm" />
         <div class="hidden xl:flex flex-col items-start text-left">
             <span class="text-[9px] font-bold text-zinc-900 dark:text-white uppercase leading-tight">{{ auth()->user()->name }}</span>
-            <span class="text-[7px] font-medium text-zinc-400 uppercase tracking-tighter">{{ auth()->user()->roles->first()->name ?? 'Membre' }}</span>
+            <span class="text-[7px] font-medium text-zinc-400 uppercase tracking-tighter">{{ auth()->user()->roles->first()->name ?? 'Member' }}</span>
         </div>
         <i class="hgi-stroke hgi-chevron-down text-[8px] text-zinc-400 group-hover:text-zinc-600 ml-0.5"></i>
     </button>
@@ -18,7 +18,7 @@
         </div>
 
         <flux:menu.item :href="route('profile.edit')" icon="user-circle" class="rounded-lg font-bold text-[10px] uppercase">
-            {{ __('Mon Profil') }}
+            {{ __('nav.My Profile') }}
         </flux:menu.item>
 
         <flux:menu.separator />
@@ -32,7 +32,7 @@
                 variant="danger"
                 class="w-full rounded-lg font-bold text-[10px] uppercase"
             >
-                {{ __('Déconnexion') }}
+                {{ __('nav.Log out') }}
             </flux:menu.item>
         </form>
     </flux:menu>

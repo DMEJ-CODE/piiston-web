@@ -14,6 +14,7 @@ class PaymentResource extends JsonResource
             'amount' => $this->amount,
             'currency' => $this->currency->code ?? null,
             'reference' => $this->reference,
+            'checkout_url' => $this->checkout_url,
             'status' => $this->status,
             'type' => $this->transaction_type,
             'paid_at' => $this->paid_at,

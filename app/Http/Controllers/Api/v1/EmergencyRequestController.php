@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Models\Vehicles\Vehicle;
 use App\Models\Workflows\EmergencyRequest;
 use App\Services\Identity\ActivityService;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +17,12 @@ class EmergencyRequestController extends Controller
 {
     protected $activityService;
 
-    public function __construct(ActivityService $activityService)
+    protected $notificationService;
+
+    public function __construct(ActivityService $activityService, NotificationService $notificationService)
     {
         $this->activityService = $activityService;
+        $this->notificationService = $notificationService;
     }
 
     public function index(): JsonResponse
@@ -140,8 +144,17 @@ class EmergencyRequestController extends Controller
             $emergency
         );
 
-        // TODO: In a real system, send push notifications to garages within the radius
-        // For now, we simulate the broadcasting logic.
+        // Broadcast to Mechanics (Simulated: Notify all users with MECHANIC role for now)
+        $mechanics = User::whereHas('roles', fn ($q) => $q->where('name', 'MECHANIC'))->get();
+        foreach ($mechanics as $mechanic) {
+            $this->notificationService->send(
+                $mechanic,
+                'NEW_SOS_ALERT',
+                'Alerte SOS Proche',
+                "Un véhicule {$vehicle->brand->name} a besoin d'assistance à {$emergency->location}.",
+                ['reference_type' => 'EmergencyRequest', 'reference_id' => $emergency->id, 'category' => 'Repair', 'priority' => 'high']
+            );
+        }
 
         return response()->json([
             'message' => 'Emergency assistance requested. Help is on the way.',
@@ -168,6 +181,15 @@ class EmergencyRequestController extends Controller
             'assigned_mechanic_id' => $validated['mechanic_id'] ?? Auth::id(),
         ]);
 
+        // Notify Owner
+        $this->notificationService->send(
+            $emergency->user,
+            'SOS_ACCEPTED',
+            'SOS Accepté',
+            "Votre demande d'assistance a été acceptée par ".($emergency->branch->name ?? 'un mécanicien').'.',
+            ['reference_type' => 'EmergencyRequest', 'reference_id' => $emergency->id, 'category' => 'Repair']
+        );
+
         return response()->json([
             'message' => 'Alert accepted successfully.',
             'request' => $emergency->load(['user', 'vehicle', 'mechanic']),
@@ -185,6 +207,15 @@ class EmergencyRequestController extends Controller
         }
 
         $emergency->update(['status' => 'ARRIVED']);
+
+        // Notify Owner
+        $this->notificationService->send(
+            $emergency->user,
+            'SOS_ARRIVED',
+            'Dépanneur Arrivé',
+            'Le mécanicien est arrivé à votre position.',
+            ['reference_type' => 'EmergencyRequest', 'reference_id' => $emergency->id, 'category' => 'Repair']
+        );
 
         // End tracking sessions for this SOS
         TrackingSession::where('entity_type', 'MECHANIC')
@@ -237,6 +268,15 @@ class EmergencyRequestController extends Controller
             'Intervention terminée',
             "L'intervention pour votre {$emergency->vehicle->brand->name} est terminée. Le carnet d'entretien a été mis à jour.",
             $emergency
+        );
+
+        // Notify Owner
+        $this->notificationService->send(
+            $emergency->user,
+            'SOS_COMPLETED',
+            'Intervention Terminée',
+            "L'intervention est terminée. Merci d'avoir utilisé Piiston.",
+            ['reference_type' => 'EmergencyRequest', 'reference_id' => $emergency->id, 'category' => 'Repair']
         );
 
         return response()->json(['message' => 'Intervention marked as completed and logbook generated.']);

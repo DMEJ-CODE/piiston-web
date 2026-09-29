@@ -8,6 +8,7 @@ use App\Models\Messaging\Conversation;
 use App\Models\Messaging\Message;
 use App\Repositories\Messaging\ConversationRepositoryInterface;
 use App\Repositories\Messaging\MessageRepositoryInterface;
+use App\Services\Notifications\NotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -17,12 +18,16 @@ class ChatEngine
 
     protected $messageRepository;
 
+    protected $notificationService;
+
     public function __construct(
         ConversationRepositoryInterface $conversationRepository,
-        MessageRepositoryInterface $messageRepository
+        MessageRepositoryInterface $messageRepository,
+        NotificationService $notificationService
     ) {
         $this->conversationRepository = $conversationRepository;
         $this->messageRepository = $messageRepository;
+        $this->notificationService = $notificationService;
     }
 
     public function startConversation(array $participantIds, string $type = Conversation::TYPE_PRIVATE, array $meta = []): Conversation
@@ -47,6 +52,21 @@ class ChatEngine
             $this->conversationRepository->updateLastMessage($conversationId, $message->id);
 
             broadcast(new MessageSent($message->load('sender')))->toOthers();
+
+            // Notify Participants
+            $conversation = $this->conversationRepository->findById($conversationId);
+            $sender = Auth::user();
+            foreach ($conversation->participants as $participant) {
+                if ($participant->id !== $sender->id) {
+                    $this->notificationService->send(
+                        $participant,
+                        'NEW_MESSAGE',
+                        "Message de {$sender->getNameAttribute()}",
+                        $message->content,
+                        ['reference_type' => 'Conversation', 'reference_id' => $conversationId, 'category' => 'Message']
+                    );
+                }
+            }
 
             return $message;
         });

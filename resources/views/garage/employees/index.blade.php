@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Employés')">
+<x-layouts::app :title="__('garage.Employés')">
     <x-garage.index-header
         title="Gestion de l'Équipe"
         subtitle="Collaborateurs et accès - {{ $branch->name }}"
@@ -8,16 +8,45 @@
         searchPlaceholder="Nom ou Email..."
     />
 
-    <div class="mt-2 flex flex-col gap-6">
+    @php
+        $stats = [
+            'total' => collect($employees)->count(),
+            'active' => collect($employees)->where('status', 'ACTIVE')->count(),
+            'invites' => collect($invitations)->count(),
+        ];
+    @endphp
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <x-dashboard.stat-card
+            title="Total Employés"
+            :value="$stats['total']"
+            icon="user-group"
+            color="var(--active-2)"
+        />
+        <x-dashboard.stat-card
+            title="Actifs"
+            :value="$stats['active']"
+            icon="tick-double-02"
+            color="#10B981"
+        />
+        <x-dashboard.stat-card
+            title="Invitations"
+            :value="$stats['invites']"
+            icon="mail-01"
+            color="#F59E0B"
+        />
+    </div>
+
+    <div class="mt-4 flex flex-col gap-6">
         <!-- Pending Invitations -->
         @if($invitations->count() > 0)
         <div class="space-y-3">
-            <h3 class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[3px] px-2">Invitations</h3>
+            <h3 class="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-[3px] px-2">Invitations en attente</h3>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 @foreach($invitations as $invite)
-                <div class="group bg-[var(--surface)] p-4 rounded-[16px] border border-blue-100 dark:border-white/5 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+                <div class="group card-premium !p-4 border-blue-500/20 shadow-sm flex flex-col gap-3">
                     <div class="flex items-center gap-3">
-                        <div class="size-8 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
+                        <div class="piiston-icon-avatar text-blue-500" style="--active-rgb: 59, 130, 246; --active-2-rgb: 37, 99, 235; color: #3b82f6;">
                             <flux:icon icon="envelope" class="size-4" />
                         </div>
                         <div class="flex flex-col overflow-hidden">
@@ -32,23 +61,23 @@
         @endif
 
         <!-- Employees List -->
-        <div class="bg-[var(--surface)] p-2 rounded-2xl border border-zinc-100 dark:border-white/5 shadow-card-sm overflow-hidden">
+        <div class="card-premium !p-0">
             <div class="overflow-x-auto">
-                <table class="w-full text-left">
+                <table class="piiston-table w-full text-left">
                     <thead>
-                        <tr class="text-left border-b border-zinc-50 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
-                            <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Membre</th>
-                            <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Rôle</th>
-                            <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Statut</th>
-                            <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Actions</th>
+                        <tr>
+                            <th>Membre</th>
+                            <th class="text-center">Rôle</th>
+                            <th class="text-center">Statut</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-50 dark:divide-white/[0.02]">
+                    <tbody>
                         @forelse($employees ?? [] as $emp)
-                            <tr class="group hover:bg-zinc-50 dark:hover:bg-white/[0.01] transition-all cursor-pointer">
-                                <td class="py-2.5 px-4">
+                            <tr class="cursor-pointer">
+                                <td>
                                     <div class="flex items-center gap-3">
-                                        <div class="size-8 rounded-xl bg-gradient-to-br from-purple-500/10 to-indigo-500/10 text-purple-600 flex items-center justify-center font-black text-xs border border-purple-500/10">
+                                        <div class="piiston-icon-avatar text-xs font-black" style="--active-rgb: 168, 85, 247; --active-2-rgb: 99, 102, 241; color: #a855f7;">
                                             {{ substr($emp->user->name ?? '?', 0, 1) }}
                                         </div>
                                         <div class="flex flex-col">
@@ -57,18 +86,18 @@
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-2.5 px-3 text-center">
+                                <td class="text-center">
                                     <span class="px-2 py-0.5 rounded-lg bg-zinc-100 dark:bg-white/5 text-[8px] font-black text-zinc-500 uppercase tracking-widest border border-zinc-200/50">
                                         {{ $emp->position ?? 'STAFF' }}
                                     </span>
                                 </td>
-                                <td class="py-2.5 px-3 text-center">
+                                <td class="text-center">
                                     <span class="px-2 py-0.5 rounded text-[7px] font-black uppercase
                                         @if($emp->status === 'ACTIVE') bg-green-500/10 text-green-600 @else bg-zinc-100 text-zinc-600 @endif">
                                         ● {{ $emp->status ?? 'ACTIVE' }}
                                     </span>
                                 </td>
-                                <td class="py-2.5 px-4 text-right">
+                                <td class="text-right">
                                     <flux:dropdown>
                                         <flux:button size="xs" variant="ghost" icon="ellipsis-vertical" class="rounded-lg" />
                                         <flux:menu class="min-w-[150px] rounded-xl p-1 shadow-xl">
@@ -80,9 +109,18 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="4" class="py-12 text-center text-zinc-400">
-                                    <p class="text-[10px] font-black uppercase">Aucun membre</p>
+                            <tr class="empty-state">
+                                <td colspan="4" class="py-24 text-center">
+                                    <div class="flex flex-col items-center justify-center gap-4">
+                                        <div class="size-16 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center border border-slate-100 dark:border-white/10">
+                                            <flux:icon icon="user-group" class="size-8 text-slate-300 dark:text-slate-600" />
+                                        </div>
+                                        <div class="flex flex-col gap-1">
+                                            <p class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Aucun Employé</p>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase">Commencez par inviter vos collaborateurs.</p>
+                                        </div>
+                                        <flux:button href="{{ route('garage.employees.create') }}" size="sm" class="btn-premium-primary mt-2">Inviter un Membre</flux:button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse

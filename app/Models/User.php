@@ -89,7 +89,7 @@ use Laravel\Sanctum\HasApiTokens;
  * @property Carbon|null $updated_at
  */
 #[Fillable([
-    'first_name', 'last_name', 'email', 'phone', 'password',
+    'name', 'first_name', 'last_name', 'email', 'phone', 'password',
     'country_id', 'language_id', 'timezone_id', 'status',
     'profile_photo', 'date_of_birth', 'gender', 'last_login_at',
     'phone_verified_at', 'email_verified_at',
@@ -391,6 +391,29 @@ class User extends Authenticatable implements PasskeyUser
     public function getNameAttribute(): string
     {
         return trim("{$this->first_name} {$this->last_name}");
+    }
+
+    /**
+     * Keep "name" in sync with the canonical first_name/last_name columns.
+     *
+     * The first token becomes the first name and the remainder becomes the last
+     * name, so assigning and reading "name" always round-trips.
+     */
+    public function setNameAttribute(?string $value): void
+    {
+        $value = trim((string) $value);
+
+        if ($value === '') {
+            $this->attributes['first_name'] = null;
+            $this->attributes['last_name'] = null;
+
+            return;
+        }
+
+        $parts = preg_split('/\s+/', $value, 2);
+
+        $this->attributes['first_name'] = $parts[0];
+        $this->attributes['last_name'] = $parts[1] ?? null;
     }
 
     public function initials(): string

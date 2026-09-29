@@ -13,10 +13,6 @@
                         <img src="{{ asset('piiston/android-chrome-192x192.png') }}" alt="Piiston Logo" class="split-auth-logo-img">
                         <span>Piiston</span>
                     </a>
-                    <button id="theme-toggle-btn" class="theme-toggle-btn" aria-label="Toggle Dark/Light Mode">
-                        <svg class="icon-svg theme-icon-sun" style="display: none !important;" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                        <svg class="icon-svg theme-icon-moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
-                    </button>
                 </div>
                 
                 <div class="split-auth-form-content">
@@ -24,16 +20,34 @@
                 </div>
             </div>
             
-            <!-- Right Pane: Visual -->
-            <div class="split-auth-visual-pane">
-                <div class="auth-bg-glow-1"></div>
-                <div class="auth-bg-glow-2"></div>
-                
-                <div class="split-auth-visual-content">
-                    <h2>Manage your fleet like a pro.</h2>
-                    <p>Join thousands of businesses optimizing their operations with Piiston.</p>
+            <aside class="split-auth-visual-pane" aria-label="Piiston overview">
+                <div class="auth-panel-orbit" aria-hidden="true">
+                    <span class="auth-panel-orbit__ring auth-panel-orbit__ring--outer"></span>
+                    <span class="auth-panel-orbit__ring auth-panel-orbit__ring--inner"></span>
+                    <span class="auth-panel-orbit__node auth-panel-orbit__node--one"></span>
+                    <span class="auth-panel-orbit__node auth-panel-orbit__node--two"></span>
+                    <span class="auth-panel-orbit__node auth-panel-orbit__node--three"></span>
+                    <span class="auth-panel-orbit__node auth-panel-orbit__node--four"></span>
+                    <div class="auth-panel-orbit__core">
+                        <img src="{{ asset('piiston/android-chrome-192x192.png') }}" alt="">
+                    </div>
                 </div>
-            </div>
+
+                <div class="split-auth-visual-content">
+                    <div class="auth-panel-brand">
+                        <img src="{{ asset('piiston/android-chrome-192x192.png') }}" alt="" width="34" height="34">
+                        <span>Piiston</span>
+                    </div>
+
+                    <div class="auth-panel-copy">
+                        <p class="auth-panel-eyebrow">Built for the way Africa moves</p>
+                        <h2>Drive with<br><em>confidence.</em></h2>
+                        <p>Piiston brings your vehicle journey into one simple, reliable place.</p>
+                    </div>
+
+                    <p class="auth-panel-note">Your road. Connected.</p>
+                </div>
+            </aside>
         </div>
 
         @persist('toast')

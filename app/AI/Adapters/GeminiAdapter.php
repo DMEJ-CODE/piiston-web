@@ -21,6 +21,7 @@ class GeminiAdapter implements AIProviderInterface
             Log::warning('Gemini API Key is missing.');
 
             return [
+                'error' => true,
                 'content' => "Désolé, l'assistant IA n'est pas configuré. Veuillez ajouter GEMINI_API_KEY dans le fichier .env.",
                 'usage' => ['total_tokens' => 0],
                 'latency_ms' => 0,
@@ -68,6 +69,7 @@ class GeminiAdapter implements AIProviderInterface
                 Log::error('Gemini API Error: '.$response->body());
 
                 return [
+                    'error' => true,
                     'content' => "Une erreur est survenue lors de la communication avec l'IA.",
                     'usage' => ['total_tokens' => 0],
                     'latency_ms' => $latency,
@@ -75,9 +77,19 @@ class GeminiAdapter implements AIProviderInterface
             }
 
             $data = $response->json();
-            $content = $data['candidates'][0]['content']['parts'][0]['text'] ?? 'Pas de réponse de l\'IA.';
+            $content = $data['candidates'][0]['content']['parts'][0]['text'] ?? null;
+
+            if (! $content) {
+                return [
+                    'error' => true,
+                    'content' => 'Pas de réponse de l\'IA.',
+                    'usage' => ['total_tokens' => 0],
+                    'latency_ms' => $latency,
+                ];
+            }
 
             return [
+                'error' => false,
                 'content' => $content,
                 'usage' => [
                     'prompt_tokens' => $data['usageMetadata']['promptTokenCount'] ?? 0,
@@ -90,6 +102,7 @@ class GeminiAdapter implements AIProviderInterface
             Log::error('Gemini Adapter Exception: '.$e->getMessage());
 
             return [
+                'error' => true,
                 'content' => "Erreur de connexion à l'IA.",
                 'usage' => ['total_tokens' => 0],
                 'latency_ms' => 0,

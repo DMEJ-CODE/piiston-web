@@ -53,6 +53,13 @@ class GaragePolicy
         return $branch->employees()->where('user_id', $user->id)->exists();
     }
 
+    public function viewMarketplaceOrders(User $user, GarageBranch $branch): bool
+    {
+        return $user->hasRole('ADMIN')
+            || $user->id === $branch->company->owner_id
+            || $user->id === $branch->manager_id;
+    }
+
     public function view(User $user, $model): bool
     {
         if ($user->hasRole('ADMIN')) {

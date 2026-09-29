@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\Maps\RoutingController;
 use App\Http\Controllers\Api\Maps\TrackingController;
 use App\Http\Controllers\Api\MarketplaceController;
 use App\Http\Controllers\Api\MessageController;
+use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\PresenceController;
 use App\Http\Controllers\Api\Promotions\CampaignController;
 use App\Http\Controllers\Api\Promotions\CouponController;
@@ -51,6 +52,7 @@ use App\Http\Controllers\Api\v1\Garage\BranchController as v1GarageBranchControl
 use App\Http\Controllers\Api\v1\Garage\CustomerController as v1GarageCustomerController;
 use App\Http\Controllers\Api\v1\Garage\DashboardController as v1GarageDashboardController;
 use App\Http\Controllers\Api\v1\Garage\EmployeeController as v1GarageEmployeeController;
+use App\Http\Controllers\Api\v1\Garage\GarageMarketplaceOrderController as v1GarageMarketplaceOrderController;
 use App\Http\Controllers\Api\v1\Garage\PurchaseOrderController as v1GaragePurchaseOrderController;
 use App\Http\Controllers\Api\v1\Garage\RepairPartController as v1GarageRepairPartController;
 use App\Http\Controllers\Api\v1\Garage\WarrantyClaimController as v1GarageWarrantyClaimController;
@@ -129,6 +131,8 @@ Route::group([], function () {
     Route::get('/catalog/brands/{brand}/models', [v1VehicleCatalogController::class, 'models']);
     Route::get('/catalog/fuel-types', [v1VehicleCatalogController::class, 'fuelTypes']);
     Route::get('/catalog/transmissions', [v1VehicleCatalogController::class, 'transmissions']);
+    Route::get('/catalog/mechanic-types', [v1MechanicController::class, 'types']);
+    Route::get('/catalog/mechanic-skills', [v1MechanicController::class, 'skills']);
     Route::get('/garages', [v1GarageController::class, 'index']);
     Route::get('/garages/nearby', [v1GarageController::class, 'nearby']);
     Route::get('/garages/{id}', [v1GarageController::class, 'show']);
@@ -152,7 +156,9 @@ Route::group([], function () {
         Route::get('/auth/user', [v1AuthController::class, 'user']);
 
         Route::get('/user/profile', [v1UserController::class, 'profile']);
-        Route::put('/user/profile', [v1UserController::class, 'updateProfile']);
+        // The mobile client sends PATCH for partial profile updates.
+        Route::match(['put', 'patch'], '/user/profile', [v1UserController::class, 'updateProfile']);
+        Route::put('/user/language', [v1UserController::class, 'updateLanguage']);
         Route::delete('/user/profile', [v1UserController::class, 'destroy']);
         Route::get('/activities', [ActivityController::class, 'index']);
 
@@ -187,6 +193,8 @@ Route::group([], function () {
 
         // Expenses & Reviews
         Route::get('/expenses/summary', [v1ExpenseController::class, 'index']);
+        Route::get('/finance/payment-methods', [PaymentController::class, 'methods']);
+        Route::get('/finance/transactions', [PaymentController::class, 'transactions']);
         Route::post('/reviews', [v1ReviewController::class, 'store']);
         Route::get('/reviews/my-reviews', [v1ReviewController::class, 'index']);
 
@@ -223,6 +231,7 @@ Route::group([], function () {
             });
 
             Route::prefix('branches/{branch}')->group(function () {
+                Route::get('/marketplace-orders', [v1GarageMarketplaceOrderController::class, 'index']);
                 Route::get('/parts/low-stock', [v1GarageRepairPartController::class, 'lowStock']);
                 Route::apiResource('parts', v1GarageRepairPartController::class)->shallow();
                 Route::apiResource('employees', v1GarageEmployeeController::class)->shallow();
@@ -239,7 +248,11 @@ Route::group([], function () {
 
         // Mechanic Management
         Route::get('/mechanic/profile', [v1MechanicController::class, 'myProfile']);
+        Route::put('/mechanic/profile', [v1MechanicController::class, 'update']);
         Route::get('/mechanic/assignments', [v1MechanicController::class, 'assignments']);
+        Route::get('/mechanic/invitations', [v1MechanicController::class, 'listInvitations']);
+        Route::post('/mechanic/invitations/{id}/accept', [v1MechanicController::class, 'acceptInvitation']);
+        Route::post('/mechanic/invitations/{id}/decline', [v1MechanicController::class, 'declineInvitation']);
         Route::post('/mechanics', [v1MechanicController::class, 'store']);
 
         // Repair & Workflow
@@ -258,6 +271,7 @@ Route::group([], function () {
 
         Route::get('/marketplace/cart', [v1CartController::class, 'index']);
         Route::post('/marketplace/cart/add', [v1CartController::class, 'add']);
+        Route::put('/marketplace/cart/update/{itemId}', [v1CartController::class, 'update']);
         Route::delete('/marketplace/cart/remove/{itemId}', [v1CartController::class, 'remove']);
         Route::get('/marketplace/orders', [v1OrderController::class, 'index']);
         Route::get('/marketplace/orders/{id}', [v1OrderController::class, 'show']);
@@ -330,12 +344,16 @@ Route::group([], function () {
         Route::get('/payments', [v1PaymentController::class, 'index']);
         Route::post('/payments/pay', [v1PaymentController::class, 'pay']);
         Route::get('/payments/verify/{reference}', [v1PaymentController::class, 'verify']);
+        Route::get('/payments/notchpay/callback', [v1PaymentController::class, 'callback'])->withoutMiddleware('auth:sanctum');
+        Route::post('/payments/notchpay/webhook', [v1PaymentController::class, 'webhook'])->withoutMiddleware('auth:sanctum');
         Route::get('/wallet', [v1WalletController::class, 'show']);
         Route::get('/wallet/history', [v1WalletController::class, 'history']);
         Route::post('/wallet/withdraw', [v1WalletController::class, 'withdraw']);
         Route::get('/subscriptions/plans', [v1SubscriptionController::class, 'plans']);
         Route::get('/subscriptions/current', [v1SubscriptionController::class, 'current']);
         Route::post('/subscriptions/subscribe', [v1SubscriptionController::class, 'subscribe']);
+        Route::get('/subscriptions/notchpay/callback', [v1SubscriptionController::class, 'callback'])->withoutMiddleware('auth:sanctum');
+        Route::post('/subscriptions/notchpay/webhook', [v1SubscriptionController::class, 'webhook'])->withoutMiddleware('auth:sanctum');
         Route::get('/invoices', [v1InvoiceController::class, 'index']);
         Route::get('/invoices/{id}', [v1InvoiceController::class, 'show']);
 
@@ -502,4 +520,5 @@ Route::middleware('auth:sanctum')->group(function () {
 // Public Marketplace
 Route::get('/marketplace/parts', [MarketplaceController::class, 'index']);
 Route::get('/marketplace/categories', [MarketplaceController::class, 'categories']);
+Route::get('/marketplace/brands', [MarketplaceController::class, 'brands']);
 Route::get('/marketplace/parts/{id}', [MarketplaceController::class, 'show']);

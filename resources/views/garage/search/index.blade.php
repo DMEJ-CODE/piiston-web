@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Recherche Avancée')">
+<x-layouts::app :title="__('garage.Recherche Avancée')">
     <div class="max-w-4xl mx-auto py-6">
         <div class="mb-8">
             <flux:heading size="lg" class="font-black uppercase tracking-tight text-center">Recherche Intelligente</flux:heading>

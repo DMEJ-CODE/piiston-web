@@ -56,6 +56,39 @@ class VehicleService
         return $vehicle;
     }
 
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function updateVehicle(Vehicle $vehicle, array $data): Vehicle
+    {
+        $photo = $data['photo'] ?? null;
+        unset($data['photo']);
+
+        $this->vehicleRepository->update($vehicle->id, $data);
+
+        if ($photo && $photo instanceof UploadedFile) {
+            $path = $photo->store('vehicles', 'public');
+            $vehicle->images()->create([
+                'image_url' => $path,
+                'type' => 'main',
+            ]);
+        }
+
+        $vehicle->history()->create([
+            'event_type' => 'UPDATE',
+            'description' => 'Vehicle details updated.',
+            'date' => now(),
+            'created_by' => Auth::id(),
+        ]);
+
+        return $vehicle->refresh();
+    }
+
+    public function deleteVehicle(Vehicle $vehicle): void
+    {
+        $vehicle->delete();
+    }
+
     public function updateMileage(Vehicle $vehicle, int $newMileage): void
     {
         $oldMileage = $vehicle->mileage;

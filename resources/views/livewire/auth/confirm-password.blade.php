@@ -1,8 +1,8 @@
-<x-layouts::auth :title="__('Confirm password')">
+<x-layouts::auth :title="__('auth.Confirm password')">
     <div class="flex flex-col gap-4">
         <x-auth-header
-            :title="__('Confirm password')"
-            :description="__('This is a secure area of the application. Please confirm your password before continuing.')"
+            :title="__('auth.Confirm password')"
+            :description="__('auth.This is a secure area of the application. Please confirm your password before continuing.')"
         />
 
         <x-auth-session-status class="text-center" :status="session('status')" />
@@ -11,9 +11,9 @@
             @csrf
 
             <div class="auth-input-group">
-                <label for="password" class="auth-label">{{ __('Password') }}</label>
+                <label for="password" class="auth-label">{{ __('auth.Password') }}</label>
                 <div class="auth-input-wrap">
-                    <svg class="icon-svg auth-input-icon" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                    <i class="hgi hgi-lock auth-input-icon"></i>
                     <input id="password" name="password" type="password" required autocomplete="current-password" placeholder="••••••••" class="auth-input">
                 </div>
                 @error('password')
@@ -22,7 +22,7 @@
             </div>
 
             <button type="submit" class="lp-btn lp-btn--primary lp-btn--lg w-full mt-1" data-test="confirm-password-button">
-                <span>{{ __('Confirm') }}</span>
+                <span>{{ __('auth.Confirm') }}</span>
             </button>
         </form>
     </div>

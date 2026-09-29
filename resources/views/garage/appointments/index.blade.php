@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Rendez-vous')">
+<x-layouts::app :title="__('garage.Rendez-vous')">
     <x-garage.index-header
         title="Planning des RDV"
         subtitle="Gestion des rendez-vous et interventions - {{ $branch->name }}"
@@ -20,23 +20,53 @@
         ]"
     />
 
-    <div class="mt-2">
-        <div class="bg-[var(--surface)] p-2 rounded-2xl border border-zinc-100 dark:border-white/5 shadow-card-sm overflow-hidden">
+    @php
+        $aptItems = $appointments instanceof \Illuminate\Pagination\LengthAwarePaginator ? $appointments->items() : $appointments;
+        $stats = [
+            'total' => $appointments instanceof \Illuminate\Pagination\LengthAwarePaginator ? $appointments->total() : collect($appointments)->count(),
+            'upcoming' => collect($aptItems)->whereIn('status', ['SCHEDULED', 'CONFIRMED'])->count(),
+            'cancelled' => collect($aptItems)->where('status', 'CANCELLED')->count(),
+        ];
+    @endphp
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+        <x-dashboard.stat-card
+            title="Total Rendez-vous"
+            :value="$stats['total']"
+            icon="calendar-03"
+            color="var(--active-2)"
+        />
+        <x-dashboard.stat-card
+            title="À Venir"
+            :value="$stats['upcoming']"
+            icon="clock-01"
+            color="#F59E0B"
+        />
+        <x-dashboard.stat-card
+            title="Annulés"
+            :value="$stats['cancelled']"
+            icon="cancel-circle-half-dot"
+            color="#EF4444"
+        />
+    </div>
+
+    <div class="mt-4">
+        <div class="card-premium !p-0">
             <div class="overflow-x-auto">
-                <table class="w-full text-left">
+                <table class="piiston-table w-full text-left">
                     <thead>
-                        <tr class="text-left border-b border-zinc-50 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
-                            <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Date & Heure</th>
-                            <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Client</th>
-                            <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Véhicule</th>
-                            <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">État</th>
-                            <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Actions</th>
+                        <tr>
+                            <th>Date & Heure</th>
+                            <th>Client</th>
+                            <th>Véhicule</th>
+                            <th class="text-center">État</th>
+                            <th class="text-right">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-zinc-50 dark:divide-white/[0.02]">
+                    <tbody>
                         @forelse($appointments ?? [] as $apt)
-                            <tr class="group hover:bg-zinc-50 dark:hover:bg-white/[0.01] transition-all cursor-pointer">
-                                <td class="py-2.5 px-4">
+                            <tr class="cursor-pointer">
+                                <td>
                                     <div class="flex items-center gap-3">
                                         <div class="flex flex-col items-center justify-center size-9 rounded-xl bg-zinc-50 dark:bg-white/5 border border-zinc-100">
                                             <span class="text-[7px] font-black uppercase text-zinc-400 leading-none">{{ \Carbon\Carbon::parse($apt->scheduled_date)->format('M') }}</span>
@@ -46,25 +76,24 @@
                                             <span class="text-[10px] font-black text-[var(--active-2)] uppercase">{{ \Carbon\Carbon::parse($apt->scheduled_date)->format('H:i') }}</span>
                                         </div>
                                     </div>
-                                </td>
-                                <td class="py-2.5 px-3">
+                                <td>
                                     <span class="text-[11px] font-bold text-zinc-700 dark:text-zinc-200">{{ $apt->customer->user->name ?? '---' }}</span>
-                                </td>
-                                <td class="py-2.5 px-3">
+                                <td>
                                     <span class="text-[10px] font-black text-zinc-900 dark:text-white uppercase tracking-tighter">{{ $apt->vehicle->license_plate ?? '---' }}</span>
                                 </td>
-                                <td class="py-2.5 px-3 text-center">
-                                    <span class="px-2 py-0.5 rounded-lg text-[7px] font-black tracking-widest uppercase
+                                <td class="text-center">
+                                    <span class="piiston-badge
                                         @switch($apt->status)
-                                            @case('REQUESTED') bg-zinc-100 text-zinc-600 @break
-                                            @case('CONFIRMED') bg-blue-500/10 text-blue-600 @break
-                                            @case('COMPLETED') bg-green-500/10 text-green-600 @break
-                                            @default bg-zinc-100 text-zinc-600
+                                            @case('REQUESTED') piiston-badge--neutral @break
+                                            @case('CONFIRMED') piiston-badge--blue @break
+                                            @case('COMPLETED') piiston-badge--green @break
+                                            @case('CANCELLED') piiston-badge--red @break
+                                            @default piiston-badge--neutral
                                         @endswitch">
                                         {{ $apt->status }}
                                     </span>
                                 </td>
-                                <td class="py-2.5 px-4 text-right">
+                                <td class="text-right">
                                     <flux:dropdown>
                                         <flux:button size="xs" variant="ghost" icon="ellipsis-vertical" class="rounded-lg" />
                                         <flux:menu class="min-w-[150px] rounded-xl p-1 shadow-xl">
@@ -77,9 +106,18 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr>
-                                <td colspan="5" class="py-12 text-center text-zinc-400">
-                                    <p class="text-[10px] font-black uppercase">Aucun RDV</p>
+                            <tr class="empty-state">
+                                <td colspan="5" class="py-24 text-center">
+                                    <div class="flex flex-col items-center justify-center gap-4">
+                                        <div class="size-16 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center border border-slate-100 dark:border-white/10">
+                                            <flux:icon icon="calendar-days" class="size-8 text-slate-300 dark:text-slate-600" />
+                                        </div>
+                                        <div class="flex flex-col gap-1">
+                                            <p class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Aucun Rendez-vous</p>
+                                            <p class="text-[10px] font-bold text-slate-400 uppercase">Le planning est libre pour le moment.</p>
+                                        </div>
+                                        <flux:button href="{{ route('garage.appointments.create') }}" size="sm" class="btn-premium-primary mt-2">Nouveau RDV</flux:button>
+                                    </div>
                                 </td>
                             </tr>
                         @endforelse

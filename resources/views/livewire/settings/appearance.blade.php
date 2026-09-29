@@ -1,12 +1,12 @@
 <section class="w-full">
     @include('partials.settings-heading')
 
-    <flux:heading class="sr-only">{{ __('Paramètres d\'apparence') }}</flux:heading>
+    <flux:heading class="sr-only">{{ __('settings.Appearance settings') }}</flux:heading>
 
-    <x-settings.layout :heading="__('Thème de l\'interface')" :subheading="__('Choisissez l\'ambiance visuelle de votre espace de travail')">
+    <x-settings.layout :heading="__('settings.Interface theme')" :subheading="__('settings.Choose the look and feel of your workspace')">
 
         <div class="mb-16">
-            <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('Mode d\'affichage') }}</h4>
+            <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('settings.Display mode') }}</h4>
 
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-6" x-data>
                 <!-- Light Mode Card -->
@@ -20,7 +20,7 @@
                     <div class="size-16 rounded-3xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-100 dark:border-white/5 transition-all group-hover:scale-110">
                         <i class="hgi-stroke hgi-sun-01 text-3xl" :class="$flux.appearance === 'light' ? 'text-[var(--active)]' : 'text-slate-400'"></i>
                     </div>
-                    <span class="text-xs font-black uppercase tracking-widest" :class="$flux.appearance === 'light' ? 'text-[var(--active-2)]' : 'text-slate-500'">{{ __('Clair') }}</span>
+                    <span class="text-xs font-black uppercase tracking-widest" :class="$flux.appearance === 'light' ? 'text-[var(--active-2)]' : 'text-slate-500'">{{ __('settings.Light') }}</span>
                 </button>
 
                 <!-- Dark Mode Card -->
@@ -32,7 +32,7 @@
                     <div class="size-16 rounded-3xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-100 dark:border-white/5 transition-all group-hover:scale-110">
                         <i class="hgi-stroke hgi-moon-01 text-3xl" :class="$flux.appearance === 'dark' ? 'text-[var(--active)]' : 'text-slate-400'"></i>
                     </div>
-                    <span class="text-xs font-black uppercase tracking-widest" :class="$flux.appearance === 'dark' ? 'text-[var(--active-2)]' : 'text-slate-500'">{{ __('Sombre') }}</span>
+                    <span class="text-xs font-black uppercase tracking-widest" :class="$flux.appearance === 'dark' ? 'text-[var(--active-2)]' : 'text-slate-500'">{{ __('settings.Dark') }}</span>
                 </button>
 
                 <!-- System Mode Card -->
@@ -44,19 +44,19 @@
                     <div class="size-16 rounded-3xl bg-white dark:bg-slate-800 flex items-center justify-center shadow-sm border border-slate-100 dark:border-white/5 transition-all group-hover:scale-110">
                         <i class="hgi-stroke hgi-computer-desktop text-3xl" :class="$flux.appearance === 'system' ? 'text-[var(--active)]' : 'text-slate-400'"></i>
                     </div>
-                    <span class="text-xs font-black uppercase tracking-widest" :class="$flux.appearance === 'system' ? 'text-[var(--active-2)]' : 'text-slate-500'">{{ __('Système') }}</span>
+                    <span class="text-xs font-black uppercase tracking-widest" :class="$flux.appearance === 'system' ? 'text-[var(--active-2)]' : 'text-slate-500'">{{ __('settings.System') }}</span>
                 </button>
             </div>
         </div>
 
         <div class="mt-16 pt-10 border-t border-slate-50 dark:border-white/5">
-            <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('Couleurs de marque') }}</h4>
+            <h4 class="text-[11px] font-black uppercase tracking-[2px] text-slate-400 mb-8">{{ __('settings.Brand colors') }}</h4>
 
             <div class="space-y-4">
                 @foreach([
-                    ['name' => 'Bleu Piiston', 'color' => '#315A7D', 'active' => true],
-                    ['name' => 'Violet Royal', 'color' => '#8B5CF6', 'active' => false],
-                    ['name' => 'Vert Émeraude', 'color' => '#10B981', 'active' => false]
+                    ['name' => 'Piiston Blue', 'color' => '#315A7D', 'active' => true],
+                    ['name' => 'Royal Purple', 'color' => '#8B5CF6', 'active' => false],
+                    ['name' => 'Emerald Green', 'color' => '#10B981', 'active' => false]
                 ] as $color)
                     <div class="flex items-center justify-between p-5 rounded-[24px] bg-white dark:bg-slate-900 border border-slate-100 dark:border-white/5 shadow-sm group hover:border-slate-200 transition-all">
                         <div class="flex items-center gap-5">
@@ -69,7 +69,7 @@
                                 <i class="hgi-stroke hgi-tick-02 text-white text-xs"></i>
                             </div>
                         @else
-                            <button type="button" class="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-[var(--active)] transition-colors">{{ __('Appliquer') }}</button>
+                            <button type="button" class="text-[9px] font-black uppercase tracking-widest text-slate-300 hover:text-[var(--active)] transition-colors">{{ __('settings.Apply') }}</button>
                         @endif
                     </div>
                 @endforeach

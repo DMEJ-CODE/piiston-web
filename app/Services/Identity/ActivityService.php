@@ -39,19 +39,20 @@ class ActivityService
 
     protected function createNotification(User $user, string $type, string $title, ?string $description, ?Model $subject): void
     {
-        $notifType = NotificationType::where('name', $type)->first();
+        $notifType = NotificationType::firstOrCreate(
+            ['name' => $type],
+            ['category' => 'System', 'status' => true]
+        );
 
-        if ($notifType) {
-            $this->notificationRepository->create([
-                'user_id' => $user->id,
-                'type_id' => $notifType->id,
-                'title' => $title,
-                'message' => $description ?? $title,
-                'reference_type' => $subject ? get_class($subject) : null,
-                'reference_id' => $subject?->id,
-                'priority' => $this->getPriorityForType($type),
-            ]);
-        }
+        $this->notificationRepository->create([
+            'user_id' => $user->id,
+            'type_id' => $notifType->id,
+            'title' => $title,
+            'message' => $description ?? $title,
+            'reference_type' => $subject ? get_class($subject) : null,
+            'reference_id' => $subject?->id,
+            'priority' => $this->getPriorityForType($type),
+        ]);
     }
 
     protected function getIconForType(string $type): string

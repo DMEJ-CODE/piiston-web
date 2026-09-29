@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Support Technique')">
+<x-layouts::app :title="__('garage.Support Technique')">
     <x-garage.index-header
         title="Centre de Support"
         subtitle="Assistance technique et support pro - {{ $branch->name }}"

@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Check-ins')">
+<x-layouts::app :title="__('garage.Check-ins')">
     <x-garage.index-header
         title="Réception & Check-ins"
         subtitle="Inspection des véhicules à l'arrivée - {{ $branch->name }}"

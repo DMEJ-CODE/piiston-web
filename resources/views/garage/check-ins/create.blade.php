@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Réception Véhicule')">
+<x-layouts::app :title="__('garage.Réception Véhicule')">
     <div x-data="{
         step: 1,
         checklist: {

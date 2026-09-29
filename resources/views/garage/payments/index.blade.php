@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Historique des Paiements')">
+<x-layouts::app :title="__('garage.Historique des Paiements')">
     <x-garage.index-header
         title="Historique des Paiements"
         subtitle="Suivi des transactions encaissées - {{ $branch->name }}"

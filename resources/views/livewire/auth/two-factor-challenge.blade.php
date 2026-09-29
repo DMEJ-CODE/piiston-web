@@ -1,4 +1,4 @@
-<x-layouts::auth :title="__('Two-factor authentication')">
+<x-layouts::auth :title="__('auth.Two-factor authentication')">
     <div class="flex flex-col gap-4">
         <div
             class="relative w-full h-auto"
@@ -31,15 +31,15 @@
         >
             <div x-show="!showRecoveryInput">
                 <x-auth-header
-                    :title="__('Authentication code')"
-                    :description="__('Enter the authentication code provided by your authenticator application.')"
+                    :title="__('auth.Authentication code')"
+                    :description="__('auth.Enter the authentication code provided by your authenticator application.')"
                 />
             </div>
 
             <div x-show="showRecoveryInput">
                 <x-auth-header
-                    :title="__('Recovery code')"
-                    :description="__('Please confirm access to your account by entering one of your emergency recovery codes.')"
+                    :title="__('auth.Recovery code')"
+                    :description="__('auth.Please confirm access to your account by entering one of your emergency recovery codes.')"
                 />
             </div>
 
@@ -47,7 +47,7 @@
                 @csrf
 
                 <div x-show="!showRecoveryInput" class="flex flex-col gap-3">
-                    <label class="text-[13px] font-bold text-zinc-500 text-center uppercase tracking-wide">{{ __('Authentication code') }}</label>
+                    <label class="text-[13px] font-bold text-zinc-500 text-center uppercase tracking-wide">{{ __('auth.Authentication code') }}</label>
                     <div class="flex justify-center">
                         <div class="flex gap-2" x-ref="otp" x-data="{
                             digits: [],
@@ -101,9 +101,9 @@
 
                 <div x-show="showRecoveryInput">
                     <div class="auth-input-group">
-                        <label for="recovery_code" class="auth-label">{{ __('Recovery code') }}</label>
+                        <label for="recovery_code" class="auth-label">{{ __('auth.Recovery code') }}</label>
                         <div class="auth-input-wrap">
-                            <svg class="icon-svg auth-input-icon" viewBox="0 0 24 24"><path d="M21 2l-2 2m-2 2l-2 2m2-2l2 2m-4 4l-4 4M3 11a8 8 0 1 0 16 0 8 8 0 0 0-16 0z"/></svg>
+                            <i class="hgi hgi-magic-wand-01 hgi-sm"></i>
                             <input id="recovery_code" name="recovery_code" type="text" x-ref="recovery_code" autocomplete="one-time-code" placeholder="Recovery code" class="auth-input" x-model="recovery_code">
                         </div>
                         @error('recovery_code')
@@ -113,15 +113,15 @@
                 </div>
 
                 <button type="submit" class="lp-btn lp-btn--primary lp-btn--lg w-full mt-2">
-                    <span>{{ __('Continue') }}</span>
+                    <span>{{ __('auth.Continue') }}</span>
                 </button>
             </form>
 
             <div class="auth-footer-text">
-                <span class="opacity-50">{{ __('or you can') }}</span>
+                <span class="opacity-50">{{ __('auth.or you can') }}</span>
                 <button type="button" @click="toggleInput()" class="font-bold underline hover:text-[var(--accent-active2)] text-center w-full">
-                    <span x-show="!showRecoveryInput">{{ __('login using a recovery code') }}</span>
-                    <span x-show="showRecoveryInput">{{ __('login using an authentication code') }}</span>
+                    <span x-show="!showRecoveryInput">{{ __('auth.login using a recovery code') }}</span>
+                    <span x-show="showRecoveryInput">{{ __('auth.login using an authentication code') }}</span>
                 </button>
             </div>
         </div>

@@ -53,12 +53,12 @@ class RepairOrderPolicy
 
         if ($employee) {
             // Mechanics can only update if assigned
-            if (in_array($employee->position, ['Mechanic', 'Diagnostic Technician'])) {
-                return $user->id === $repair->assigned_mechanic_id;
+            if (in_array($employee->position, ['MECHANIC', 'Diagnostic Technician'])) {
+                return $user->id === (int) $repair->assigned_mechanic_id;
             }
 
             // Workshop Managers and Garage Managers can update everything
-            if (in_array($employee->position, ['Garage Manager', 'Workshop Manager'])) {
+            if (in_array($employee->position, ['MANAGER', 'Garage Manager', 'Workshop Manager'])) {
                 return true;
             }
         }

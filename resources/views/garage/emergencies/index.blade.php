@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Appels d\'Urgence')">
+<x-layouts::app :title="__('nav.Appels d\'Urgence')">
     <x-garage.index-header
         title="Appels d'Urgence"
         subtitle="SOS et assistances immédiates à proximité - {{ $branch->name }}"
@@ -58,7 +58,7 @@
                                         <form method="POST" action="{{ route('garage.emergencies.accept', $sos->id) }}" class="flex items-center gap-2 justify-end">
                                             @csrf
                                             <select name="mechanic_id" class="text-[10px] font-bold uppercase tracking-widest bg-zinc-50 dark:bg-white/5 border border-zinc-100 dark:border-white/5 rounded-xl px-3 h-10 outline-none focus:ring-1 focus:ring-red-500/50">
-                                                <option value="">{{ __('Assigner à...') }}</option>
+                                                <option value="">{{ __('garage.Assigner à...') }}</option>
                                                 @foreach($branch->employees as $employee)
                                                     <option value="{{ $employee->user_id }}">{{ $employee->user->name }}</option>
                                                 @endforeach

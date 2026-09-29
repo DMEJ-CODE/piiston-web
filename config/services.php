@@ -39,6 +39,19 @@ return [
         'key' => env('GEMINI_API_KEY'),
     ],
 
-    'piiston_admin_email' => env('PIISTON_ADMIN_EMAIL', 'support@piiston.com'),
+    'openrouter' => [
+        'key' => env('OPENROUTER_API_KEY'),
+    ],
+
+    'notchpay' => [
+        'key' => env('NOTCHPAY_API_KEY'),
+        'base_url' => env('NOTCHPAY_BASE_URL', 'https://api.notchpay.co'),
+        'callback_url' => env('NOTCHPAY_CALLBACK_URL'),
+        'garage_callback_url' => env('NOTCHPAY_GARAGE_CALLBACK_URL'),
+        'payment_callback_url' => env('NOTCHPAY_PAYMENT_CALLBACK_URL'),
+        'webhook_secret' => env('NOTCHPAY_WEBHOOK_SECRET'),
+    ],
+
+    'piiston_admin_email' => env('PIISTON_EMAIL', 'support@piiston.com'),
 
 ];

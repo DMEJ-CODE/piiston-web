@@ -36,9 +36,9 @@ class ProductResource extends JsonResource
                 });
             }),
             'social' => [
-                'likes_count' => $this->likes()->count(),
-                'comments_count' => $this->comments()->count(),
-                'is_liked' => $this->is_liked,
+                'likes_count' => $this->likes_count ?? 0,
+                'comments_count' => $this->comments_count ?? 0,
+                'is_liked' => (bool) ($this->is_liked ?? false),
             ],
             'created_at' => $this->created_at,
         ];

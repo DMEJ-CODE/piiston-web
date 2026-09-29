@@ -5,7 +5,21 @@
     {{ filled($title ?? null) ? $title.' - '.config('app.name', 'Piiston') : config('app.name', 'Piiston') }}
 </title>
 
-@vite(['resources/css/app.css', 'resources/js/app.js'])
+<script>
+    (function () {
+        const storedTheme = localStorage.getItem('piiston_theme');
+        const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = storedTheme || (systemPrefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+        if (theme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    })();
+</script>
+
+@vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/landing.js'])
 
 <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 <link rel="stylesheet" href="https://cdn.hugeicons.com/font/hgi-stroke-rounded.css" crossorigin="anonymous" />

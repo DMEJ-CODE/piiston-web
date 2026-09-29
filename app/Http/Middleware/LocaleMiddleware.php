@@ -33,6 +33,6 @@ class LocaleMiddleware
             return $user->preference->language->code;
         }
 
-        return null;
+        return 'en';
     }
 }

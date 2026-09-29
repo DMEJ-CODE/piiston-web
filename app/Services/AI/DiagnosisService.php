@@ -80,13 +80,29 @@ class DiagnosisService
             $data = json_decode($matches[0], true) ?? [];
         }
 
+        $causes = $data['causes'] ?? null;
+        if (empty($causes)) {
+            $causes = $content ? [$content] : ['Vérification générale du système recommandée'];
+        }
+        if (is_string($causes)) {
+            $causes = [$causes];
+        }
+
+        $actions = $data['actions'] ?? [];
+        if (is_string($actions)) {
+            $actions = [$actions];
+        }
+        if (empty($actions)) {
+            $actions = ['Inspecter les composants principaux', 'Consulter un technicien qualifié'];
+        }
+
         // Save structured diagnosis
         return Auth::user()->aiDiagnoses()->create([
             'vehicle_id' => $vehicle->id,
             'symptoms' => $symptoms,
             'dtc_code' => $dtcCode,
-            'possible_causes' => $data['causes'] ?? ($content ? [$content] : []),
-            'recommended_actions' => $data['actions'] ?? [],
+            'possible_causes' => $causes,
+            'recommended_actions' => $actions,
             'urgency_level' => $data['urgency'] ?? 'MEDIUM',
             'confidence_score' => $data['confidence'] ?? 80,
         ]);

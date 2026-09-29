@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Nouveau rendez-vous')">
+<x-layouts::app :title="__('garage.Nouveau rendez-vous')">
     <div class="flex flex-col gap-4 pb-0">
         <!-- Header Section -->
         <div class="flex items-center justify-between">

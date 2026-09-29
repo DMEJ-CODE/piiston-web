@@ -15,6 +15,14 @@
     --active-2: #315A7D;
     --active-2-rgb: 49, 90, 125;
 
+    /* BRAND ACCENT — used for eyebrows, section titles, highlights */
+    --brand-accent: #467A9F;
+    --brand-accent-light: #DCE8F0;
+
+    /* "Purple" accent remapped to steel blue to match mobile palette */
+    --brand-purple: #315A7D;
+    --brand-purple-light: #DCE8F0;
+
     /* THEME-CONSISTENT PASTELS */
     --pastel-blue: #E5EEF3;
     --pastel-slate: #F0F3F5;
@@ -24,6 +32,12 @@
     /* BORDER & NEUTRAL */
     --border: #E2E8F0;
     --neutral: #64748B;
+    
+    /* TEXT */
+    --text: #0F172A;
+    --text-secondary: #64748B;
+    --text-inverse: #FFFFFF;
+    --secondary-dark: #334155;
 
     /* ALERTS / SUCCESS / ERROR */
     --success: #10B981;
@@ -31,31 +45,164 @@
     --warning: #F59E0B;
 
     /* BACKGROUNDS & SURFACES */
-    --background: #F8FAFC;
+    --background: #F1F5F9;
     --surface: #FFFFFF;
-    --sidebar-bg: #F1F5F9;
+    --sidebar-bg: #F8FAFC;
 
-    /* SHADOWS — High End / Mobile Inspired */
+    /* SHADOWS — Mobile Inspired (ButtonA style) */
     --shadow-soft: 0 2px 10px rgba(0, 0, 0, 0.02);
-    --shadow-card: 0 12px 35px -10px rgba(0, 0, 0, 0.08), 0 4px 12px -5px rgba(0, 0, 0, 0.03);
-    --shadow-button: 0 4px 12px rgba(49, 90, 125, 0.2);
+    --shadow-card: 0 10px 30px -10px rgba(0, 0, 0, 0.06), 0 4px 10px -5px rgba(0, 0, 0, 0.02);
+    --shadow-button-mobile: 0 6px 12px rgba(49, 90, 125, 0.25);
+    --shadow-button-hover: 0 10px 20px rgba(49, 90, 125, 0.35);
 
     /* UI Layout Variables */
     --radius-xl: 18px;
-    --radius-2xl: 24px;
+    --radius-2xl: 25px; /* ButtonA standard */
     --radius-3xl: 32px;
 
     --transition: .25s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Compact messaging density, matching the mobile conversation rhythm. */
+.chat-center > div:first-child {
+    width: 310px !important;
+}
+
+.chat-center > div:first-child > div:first-child {
+    padding: 1rem !important;
+}
+
+.chat-center > div:first-child button {
+    padding: 0.7rem 0.75rem !important;
+}
+
+.chat-center > div:first-child button > div:first-child {
+    width: 2.25rem !important;
+    height: 2.25rem !important;
+    border-radius: 0.75rem;
+    font-size: 0.875rem;
+}
+
+.chat-center input {
+    font-size: 0.8125rem;
+}
+
+.chat-center .hgi-stroke {
+    font-size: 1rem;
+}
+
+.chat-center > div:last-child > div:first-child {
+    padding: 0.625rem 1rem !important;
+}
+
+.chat-center > div:last-child > div:nth-child(2) {
+    padding: 0.75rem 1rem !important;
+}
+
+.chat-center > div:last-child > div:last-child {
+    padding: 0.75rem 1rem !important;
+}
+
+/* Final compact pass: utility classes on the legacy chat markup are intentionally
+   overridden here so the web density matches the mobile conversation screen. */
+.chat-center {
+    font-size: 0.8125rem;
+}
+
+.chat-center button {
+    min-height: 0 !important;
+}
+
+.chat-center > div:first-child button {
+    gap: 0.625rem !important;
+    padding: 0.625rem 0.75rem !important;
+}
+
+.chat-center > div:first-child button > div:first-child {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 0.625rem !important;
+    font-size: 0.75rem !important;
+}
+
+.chat-center > div:first-child h2 {
+    font-size: 0.95rem !important;
+}
+
+.chat-center > div:first-child > div:nth-child(2) h3 {
+    max-width: 145px;
+    overflow: hidden;
+    font-size: 0.7rem !important;
+    line-height: 1.2 !important;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.chat-center > div:first-child input {
+    min-height: 2rem !important;
+    padding-top: 0.4rem !important;
+    padding-bottom: 0.4rem !important;
+}
+
+.chat-center > div:first-child > div:first-child > div:last-child button {
+    padding: 0.35rem 0.55rem !important;
+}
+
+.chat-center > div:last-child > div:first-child button {
+    width: 2rem !important;
+    height: 2rem !important;
+    padding: 0.35rem !important;
+}
+
+.chat-center > div:last-child > div:first-child > div:first-child > div {
+    width: 2rem !important;
+    height: 2rem !important;
+    border-radius: 0.625rem !important;
+}
+
+.chat-center > div:last-child > div:first-child h3 {
+    font-size: 0.7rem !important;
+}
+
+.chat-center > div:last-child > div:last-child form {
+    gap: 0.35rem !important;
+}
+
+.chat-center > div:last-child > div:last-child form > button:first-child {
+    width: 1.75rem !important;
+    height: 1.75rem !important;
+    padding: 0.25rem !important;
+}
+
+.chat-center > div:last-child > div:last-child form > input {
+    min-height: 2rem !important;
+    padding: 0.45rem 0.75rem !important;
+    font-size: 0.75rem !important;
+}
+
+.chat-center > div:last-child > div:last-child form > button:last-child {
+    width: 2rem !important;
+    height: 2rem !important;
+    padding: 0.35rem !important;
+    border-radius: 0.625rem !important;
+}
+
+.chat-center > div:last-child > div:nth-child(2) {
+    font-size: 0.75rem;
+}
+
+.dark,
 [data-theme="dark"] {
-    --background: #020617;
+    --background: #090D16;
     --surface: #0F172A;
-    --sidebar-bg: #0F172A;
+    --sidebar-bg: #0B111E;
     --text: #F8FAFC;
     --text-secondary: #94A3B8;
+    --text-inverse: #0F172A;
+    --secondary-dark: #cbd5e1;
     --border: #1E293B;
-    --shadow-card: 0 15px 45px rgba(0, 0, 0, 0.4);
+    --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.4);
+    --shadow-button-mobile: 0 6px 12px rgba(0, 0, 0, 0.3);
 }
 
 body {
@@ -67,49 +214,59 @@ body {
 }
 
 @layer components {
-    /* ── TYPOGRAPHY ────────────────────────── */
-    .heading-premium { @apply font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none; }
+    /* ── TYPOGRAPHY — Refined & Small (Mobile-First Philosophy) ────────────────────────── */
+    h1 { @apply text-base font-black uppercase tracking-tight; }
+    h2 { @apply text-sm font-black uppercase tracking-tight; }
+    h3 { @apply text-xs font-black uppercase tracking-widest; }
+    h4 { @apply text-[11px] font-black uppercase tracking-widest; }
+    h5 { @apply text-[10px] font-black uppercase tracking-widest; }
+
+    .heading-premium { @apply font-black uppercase tracking-tight text-slate-900 dark:text-white leading-none text-sm; }
     .label-premium { @apply text-[10px] font-black uppercase tracking-[2px] text-slate-400 dark:text-slate-500; }
 
-    /* ── PREMIUM CARDS ────────────────────────── */
+    /* ── PREMIUM CARDS — THE HEART OF THE UI ────────────────────────── */
     .card-premium {
         background-color: var(--surface) !important;
-        @apply p-4 rounded-2xl border border-white dark:border-slate-800 transition-all duration-300 relative overflow-hidden;
+        @apply p-6 rounded-[24px] border border-slate-200/80 dark:border-slate-800/80 transition-all duration-300 relative overflow-hidden;
         box-shadow: var(--shadow-card);
     }
+    .card-premium::before {
+        content: '';
+        @apply absolute inset-0 rounded-[24px] border border-slate-200/40 dark:border-white/5 pointer-events-none;
+    }
     .card-premium:hover {
-        @apply -translate-y-1.5;
-        box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.12);
+        @apply -translate-y-1;
+        box-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.15);
     }
 
     /* ── SIDEBAR — Elegant and Proportional ────────────────────────── */
     [data-flux-sidebar] {
         background-color: var(--sidebar-bg) !important;
-        @apply !border-r !border-slate-200 dark:!border-slate-900 !px-4 !py-8 w-[260px];
+        @apply !border-r !border-slate-200/80 dark:!border-slate-800/80 !px-4 !py-6 w-[270px];
     }
 
     .sidebar-nav-item {
-        @apply relative flex items-center gap-4 px-4 py-3 rounded-2xl font-bold text-[13px] transition-all duration-300 border border-transparent !no-underline !mb-1;
+        @apply relative flex items-center gap-4 px-5 py-3 rounded-xl font-bold text-[13px] transition-all duration-300 border border-transparent !no-underline !mb-1;
         color: var(--text-secondary) !important;
     }
 
     .sidebar-nav-item:hover {
-        @apply bg-white/60 dark:bg-white/5 text-zinc-900 dark:text-white;
+        @apply bg-white/80 dark:bg-white/5 text-zinc-900 dark:text-white;
     }
 
     /* FORCED ACTIVE STATE */
-    .sidebar-nav-item[data-current],
-    a[data-flux-sidebar-item][data-current] {
+    .sidebar-nav-item[data-current="true"],
+    a[data-flux-sidebar-item][data-current="true"] {
         background-color: var(--surface) !important;
         color: var(--active-2) !important;
-        @apply font-black dark:bg-slate-800 dark:!text-white border-slate-200 dark:border-slate-700;
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.05) !important;
+        @apply font-bold dark:bg-slate-800 dark:!text-white border-slate-200 dark:border-slate-700;
+        box-shadow: none !important;
     }
 
-    .sidebar-nav-item[data-current]::before,
-    a[data-flux-sidebar-item][data-current]::before {
+    .sidebar-nav-item[data-current="true"]::before,
+    a[data-flux-sidebar-item][data-current="true"]::before {
         content: '';
-        @apply absolute left-1.5 top-1/2 -translate-y-1/2 w-1 h-6 rounded-full;
+        @apply absolute left-1.5 top-1/2 -translate-y-1/2 w-1 h-5 rounded-full;
         background: linear-gradient(to bottom, var(--active), var(--active-2));
     }
 
@@ -117,21 +274,129 @@ body {
         @apply text-xl opacity-70 transition-all duration-300;
         color: inherit;
     }
-    .sidebar-nav-item[data-current] i, .sidebar-nav-item:hover i { @apply opacity-100 scale-105; }
+    .sidebar-nav-item[data-current="true"] i, .sidebar-nav-item:hover i { @apply opacity-100 scale-105; }
 
-    /* ── BUTTONS ────────────────────────── */
-    /* Base button styles applied individually to avoid recursive @apply errors in some Vite versions */
-    .btn-premium-primary {
-        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm active:scale-95 disabled:opacity-50 !no-underline text-white border-none;
-        background: linear-gradient(135deg, var(--active-2) 0%, var(--active) 100%);
-        box-shadow: var(--shadow-button);
+    .sidebar-nav-item[data-current="true"] i {
+        transform: none !important;
     }
+
+    /* ── BOUTONS MOBILE PREMIUM (ButtonA Style) ────────────────────────── */
+    .btn-premium-primary {
+        @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-[25px] font-bold text-[14px] transition-all duration-300 active:scale-95 disabled:opacity-50 !no-underline text-white border-none cursor-pointer;
+        background-color: var(--active-2);
+        box-shadow: var(--shadow-button-mobile);
+    }
+
+    .dark .btn-premium-primary,
+    [data-theme="dark"] .btn-premium-primary {
+        background-color: var(--active);
+    }
+
     .btn-premium-primary:hover {
-        @apply brightness-110 -translate-y-0.5;
-        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        @apply -translate-y-1 shadow-lg brightness-110;
+        box-shadow: var(--shadow-button-hover);
     }
 
     .btn-premium-secondary {
-        @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest transition-all duration-300 shadow-sm active:scale-95 disabled:opacity-50 !no-underline bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-800 hover:bg-slate-50;
+        @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-[25px] font-bold text-[14px] transition-all duration-300 shadow-sm active:scale-95 disabled:opacity-50 !no-underline bg-white dark:bg-white/5 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-white/10 hover:bg-slate-50;
+    }
+
+    /* Danger Button (aligned with mobile logout) */
+    .btn-premium-danger {
+        @apply inline-flex items-center justify-center gap-2 px-8 py-3.5 rounded-[18px] font-black text-[14px] transition-all duration-300 border border-red-500/20 bg-red-500/5 text-red-600 hover:bg-red-500/10 active:scale-95 !no-underline;
+    }
+
+    /* ── HEADER ────────────────────────── */
+    [data-flux-header] {
+        @apply h-14 border-b border-slate-200/80 dark:border-slate-800/80;
+        background: rgba(248, 250, 252, 0.8) !important;
+        backdrop-filter: blur(20px) saturate(180%) !important;
+    }
+    .dark [data-flux-header],
+    [data-theme="dark"] [data-flux-header] {
+        background: rgba(9, 13, 22, 0.85) !important;
+    }
+
+    /* ── PIISTON SHARED TABLE ──────────────────────────────────────────── */
+    .piiston-table-card {
+        background-color: var(--surface) !important;
+        @apply p-5 rounded-[24px] border border-slate-200/80 dark:border-white/5 transition-all duration-300 relative overflow-hidden;
+        box-shadow: var(--shadow-card);
+    }
+    .piiston-table-card::before {
+        content: '';
+        @apply absolute inset-0 rounded-[24px] border border-slate-200/40 dark:border-white/5 pointer-events-none;
+    }
+
+    .piiston-table thead tr {
+        @apply border-b border-slate-100 dark:border-white/5;
+    }
+
+    .piiston-table thead th {
+        @apply py-3 px-4 text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest;
+    }
+
+    .piiston-table tbody {
+        @apply divide-y divide-slate-100 dark:divide-white/5;
+    }
+
+    .piiston-table tbody tr {
+        @apply transition-colors duration-150 hover:bg-slate-50/80 dark:hover:bg-white/[0.01];
+    }
+
+    .piiston-table tbody td {
+        @apply py-4 px-4;
+    }
+
+    .piiston-table .empty-state td {
+        @apply py-16 text-center;
+    }
+
+    /* ── BADGE / STATUS PILL ───────────────────────────────────────────── */
+    .piiston-badge {
+        @apply px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-widest border;
+    }
+    .piiston-badge--neutral {
+        @apply bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-slate-400 border-slate-200/50 dark:border-white/10;
+    }
+    .piiston-badge--blue {
+        @apply bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20;
+    }
+    .piiston-badge--green {
+        @apply bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20;
+    }
+    .piiston-badge--amber {
+        @apply bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20;
+    }
+    .piiston-badge--red {
+        @apply bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20;
+    }
+    .piiston-badge--teal {
+        @apply bg-teal-500/10 text-teal-600 dark:text-teal-400 border-teal-500/20;
+    }
+
+    /* ── ICON AVATAR ───────────────────────────────────────────────────── */
+    .piiston-icon-avatar {
+        @apply size-9 rounded-xl flex items-center justify-center border shadow-sm shrink-0;
+        background: linear-gradient(135deg, rgba(var(--active-rgb), 0.12) 0%, rgba(var(--active-2-rgb), 0.06) 100%);
+        border-color: rgba(var(--active-rgb), 0.2);
+        color: var(--active-2);
+    }
+    .dark .piiston-icon-avatar {
+        color: var(--active);
+        border-color: rgba(var(--active-rgb), 0.2);
+    }
+
+    /* ── PAGE TITLE SECTION ────────────────────────────────────────────── */
+    .piiston-page-title {
+        @apply text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white;
+    }
+    .piiston-page-subtitle {
+        @apply text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-slate-500;
+    }
+
+    /* ── PAGINATION ────────────────────────────────────────────────────── */
+    .piiston-pagination {
+        @apply px-4 py-3 border-t border-slate-100 dark:border-white/5;
     }
 }

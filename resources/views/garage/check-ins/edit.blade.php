@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Modifier l\'enregistrement')">
+<x-layouts::app :title="__('garage.Modifier l\'enregistrement')">
     <flux:heading size="xl">Modifier l'enregistrement</flux:heading>
     <flux:text class="mt-2">Modifier l'enregistrement du {{ $checkIn->check_in_time?->format('d/m/Y H:i') }}.</flux:text>
 

@@ -71,4 +71,7 @@ return [
     'Update your name and email address' => 'Mettez à jour votre nom et votre adresse e-mail',
     'Vue Générale' => 'Vue Générale',
     'You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.' => 'Un code pin sécurisé et aléatoire vous sera demandé lors de la connexion, que vous pourrez récupérer depuis l\'application TOTP sur votre téléphone.',
+    'Modifier l\'employé' => 'Modifier l\'employé',
+    'Modifier l\'enregistrement' => 'Modifier l\'enregistrement',
+    'Marketplace de Pièces' => 'Marketplace de Pièces',
 ];

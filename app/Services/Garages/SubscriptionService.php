@@ -5,9 +5,14 @@ namespace App\Services\Garages;
 use App\Models\Garages\GarageBranch;
 use App\Models\Garages\GarageSubscription;
 use App\Models\Garages\GarageSubscriptionPlan;
+use App\Models\User;
+use App\Services\Payments\NotchPayClient;
+use Illuminate\Support\Str;
 
 class SubscriptionService
 {
+    public function __construct(protected NotchPayClient $notchPay) {}
+
     public function getActiveSubscription(GarageBranch $branch): ?GarageSubscription
     {
         return GarageSubscription::whereHas('company', function ($q) use ($branch) {
@@ -60,5 +65,39 @@ class SubscriptionService
             'ends_at' => $endsAt,
             'trial_ends_at' => $data['trial_ends_at'] ?? null,
         ]);
+    }
+
+    public function initializeCheckout(GarageBranch $branch, GarageSubscriptionPlan $plan, User $user, string $billingCycle): string
+    {
+        $billingCycle = in_array($billingCycle, ['monthly', 'yearly'], true) ? $billingCycle : 'monthly';
+        $reference = 'PII-GARAGE-'.strtoupper(Str::random(12));
+        $amount = $billingCycle === 'yearly' ? $plan->yearly_price : $plan->monthly_price;
+        $response = $this->notchPay->initialize([
+            'amount' => (float) $amount,
+            'currency' => 'XAF',
+            'email' => $user->email,
+            'phone' => $user->phone,
+            'description' => 'Piiston Garage '.$plan->name.' ('.$billingCycle.')',
+            'reference' => $reference,
+            'callback' => config('services.notchpay.garage_callback_url') ?: url('/garage/subscriptions/notchpay/callback'),
+            'locked_currency' => 'XAF',
+            'locked_country' => 'CM',
+            'customer_meta' => ['company_id' => $branch->company_id, 'plan_id' => $plan->id],
+        ]);
+        $checkoutUrl = $response['authorization_url'] ?? null;
+        abort_unless(is_string($checkoutUrl) && $checkoutUrl !== '', 502, 'Notch Pay did not return a checkout URL.');
+
+        GarageSubscription::create([
+            'company_id' => $branch->company_id,
+            'plan_id' => $plan->id,
+            'status' => 'pending',
+            'billing_cycle' => $billingCycle,
+            'starts_at' => now(),
+            'ends_at' => now(),
+            'payment_method' => 'notchpay',
+            'transaction_reference' => $response['transaction']['reference'] ?? $reference,
+        ]);
+
+        return $checkoutUrl;
     }
 }

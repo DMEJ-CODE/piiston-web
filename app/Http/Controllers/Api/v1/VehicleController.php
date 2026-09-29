@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\v1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Vehicles\StoreVehicleRequest;
+use App\Http\Requests\Vehicles\UpdateVehicleRequest;
 use App\Http\Resources\Vehicles\VehicleResource;
 use App\Models\Vehicles\Vehicle;
 use App\Repositories\Vehicles\VehicleRepositoryInterface;
@@ -51,6 +52,37 @@ class VehicleController extends Controller
         $this->authorize('view', $vehicle);
 
         return response()->json(new VehicleResource($vehicle));
+    }
+
+    public function update(UpdateVehicleRequest $request, int $id): JsonResponse
+    {
+        $vehicle = $this->vehicleRepository->findById($id);
+        if (! $vehicle) {
+            return response()->json(['message' => 'Vehicle not found'], 404);
+        }
+
+        $this->authorize('update', $vehicle);
+
+        $vehicle = $this->vehicleService->updateVehicle($vehicle, $request->validated());
+
+        return response()->json([
+            'message' => 'Vehicle updated successfully',
+            'vehicle' => new VehicleResource($vehicle),
+        ]);
+    }
+
+    public function destroy(int $id): JsonResponse
+    {
+        $vehicle = $this->vehicleRepository->findById($id);
+        if (! $vehicle) {
+            return response()->json(['message' => 'Vehicle not found'], 404);
+        }
+
+        $this->authorize('delete', $vehicle);
+
+        $this->vehicleService->deleteVehicle($vehicle);
+
+        return response()->json(['message' => 'Vehicle deleted successfully']);
     }
 
     public function updateMileage(Request $request, int $id): JsonResponse

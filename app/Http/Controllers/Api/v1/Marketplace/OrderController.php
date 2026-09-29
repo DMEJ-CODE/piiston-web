@@ -3,8 +3,11 @@
 namespace App\Http\Controllers\Api\v1\Marketplace;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Marketplace\StoreMarketplaceOrderRequest;
 use App\Http\Resources\Marketplace\OrderResource;
+use App\Models\Garages\GarageBranch;
 use App\Repositories\Marketplace\OrderRepositoryInterface;
+use App\Services\Finance\PaymentService;
 use App\Services\Marketplace\OrderService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -41,23 +44,44 @@ class OrderController extends Controller
         return response()->json(new OrderResource($order));
     }
 
-    public function store(Request $request): JsonResponse
+    public function store(StoreMarketplaceOrderRequest $request, PaymentService $paymentService): JsonResponse
     {
-        $request->validate([
-            'seller_id' => 'required|exists:seller_profiles,id',
-            'address_id' => 'required|exists:addresses,id',
-            'items' => 'required|array|min:1',
-            'items.*.listing_id' => 'required|exists:product_listings,id',
-            'items.*.quantity' => 'required|integer|min:1',
-            'total_amount' => 'required|numeric',
-            'currency_id' => 'required|exists:currencies,id',
-        ]);
+        $validated = $request->validated();
 
-        $order = $this->orderService->placeOrder($request->except('items'), $request->items);
+        if (isset($validated['garage_branch_id'])) {
+            $branch = GarageBranch::findOrFail($validated['garage_branch_id']);
+            $this->authorize('operate', $branch);
+        }
 
-        return response()->json([
+        $order = $this->orderService->placeOrder(
+            collect($validated)->except('items')->all(),
+            $validated['items'],
+        );
+
+        $data = [
             'message' => 'Order placed successfully',
             'order' => new OrderResource($order->load('items.listing.part')),
-        ], 201);
+        ];
+
+        // If payment is not CASH/LIVRAISON, initialize payment
+        if ($order->payment_method !== 'CASH' && $order->payment_method !== 'LIVRAISON') {
+            // Map simple strings to IDs if needed, or use payment_method_id if sent
+            $methodId = $validated['payment_method_id'] ?? 1; // Fallback or lookup
+
+            try {
+                $transaction = $paymentService->initialize([
+                    'amount' => $order->total_amount,
+                    'payment_method_id' => $methodId,
+                    'transaction_type' => 'MARKETPLACE',
+                    'reference_id' => $order->id,
+                ]);
+                $data['checkout_url'] = $transaction->checkout_url;
+                $data['payment_reference'] = $transaction->reference;
+            } catch (\Exception $e) {
+                // Keep order but log error
+            }
+        }
+
+        return response()->json($data, 201);
     }
 }

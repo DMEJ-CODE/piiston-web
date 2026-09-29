@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class UserSubscription extends Model
 {
-    protected $fillable = ['user_id', 'plan_id', 'start_date', 'end_date', 'status', 'auto_renew'];
+    protected $fillable = ['user_id', 'plan_id', 'start_date', 'end_date', 'status', 'auto_renew', 'notchpay_reference', 'checkout_url'];
 
     protected $casts = [
         'start_date' => 'datetime',

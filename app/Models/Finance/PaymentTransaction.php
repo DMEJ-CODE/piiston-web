@@ -12,7 +12,7 @@ class PaymentTransaction extends Model
 {
     protected $fillable = [
         'payer_id', 'payee_id', 'amount', 'currency_id',
-        'payment_method_id', 'reference', 'transaction_type', 'status', 'paid_at',
+        'payment_method_id', 'reference', 'notchpay_reference', 'checkout_url', 'transaction_type', 'status', 'paid_at',
     ];
 
     protected $casts = [

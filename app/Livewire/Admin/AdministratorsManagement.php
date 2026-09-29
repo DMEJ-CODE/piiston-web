@@ -108,9 +108,12 @@ class AdministratorsManagement extends Component
     {
         $administrators = Administrator::with(['user', 'roles'])
             ->when($this->search, function ($query) {
-                $query->whereHas('user', function ($q) {
-                    $q->where('name', 'like', "%{$this->search}%")
-                        ->orWhere('email', 'like', "%{$this->search}%");
+                $search = trim($this->search);
+
+                $query->whereHas('user', function ($q) use ($search) {
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%");
                 });
             })
             ->orderBy($this->sortField, $this->sortDirection)

@@ -3,10 +3,12 @@
 namespace Tests\Feature\Api\v1;
 
 use App\Models\Finance\PaymentMethod;
+use App\Models\Finance\PaymentTransaction;
 use App\Models\Finance\Wallet;
 use App\Models\Globalization\Country;
 use App\Models\Globalization\Currency;
 use App\Models\User;
+use App\Services\Finance\PaymentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -88,5 +90,32 @@ class PaymentTest extends TestCase
 
         $response->assertStatus(200)
             ->assertJsonPath('balance', 1500);
+    }
+
+    public function test_successful_wallet_payment_is_credited_once()
+    {
+        $transaction = PaymentTransaction::create([
+            'payer_id' => $this->user->id,
+            'amount' => 5000,
+            'currency_id' => $this->currency->id,
+            'payment_method_id' => $this->method->id,
+            'reference' => 'PII-WALLET-TEST',
+            'transaction_type' => 'WALLET_FUNDING',
+            'status' => 'PENDING',
+        ]);
+
+        $service = $this->app->make(PaymentService::class);
+        $service->handleWebhook($transaction->reference, 'complete');
+        $service->handleWebhook($transaction->reference, 'complete');
+
+        $this->assertDatabaseHas('payment_transactions', [
+            'id' => $transaction->id,
+            'status' => 'SUCCESS',
+        ]);
+        $this->assertDatabaseHas('wallets', [
+            'user_id' => $this->user->id,
+            'balance' => 5000,
+        ]);
+        $this->assertDatabaseCount('wallet_transactions', 1);
     }
 }

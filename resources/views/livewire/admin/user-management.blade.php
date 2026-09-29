@@ -1,19 +1,19 @@
 <div class="flex flex-col gap-6 pb-12">
     <x-admin.index-header
-        title="Gestion Utilisateurs"
-        subtitle="Contrôle des comptes plateforme"
+        title="User Management"
+        subtitle="Platform account control"
         searchModel="search"
-        searchPlaceholder="Rechercher par nom ou email..."
+        searchPlaceholder="Search by name or email..."
     />
 
     <div class="overflow-x-auto">
         <table class="table-premium">
             <thead>
                 <tr>
-                    <th>Utilisateur</th>
+                    <th>User</th>
                     <th>Email / Contact</th>
-                    <th class="text-center">Date Inscription</th>
-                    <th class="text-center">Statut</th>
+                    <th class="text-center">Registration Date</th>
+                    <th class="text-center">Status</th>
                     <th class="text-right">Actions</th>
                 </tr>
             </thead>
@@ -32,7 +32,7 @@
                         <td>
                             <div class="flex flex-col">
                                 <span class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400">{{ $user->email }}</span>
-                                <span class="text-[10px] text-zinc-400 uppercase tracking-tighter">{{ $user->phone ?? 'Aucun téléphone' }}</span>
+                                <span class="text-[10px] text-zinc-400 uppercase tracking-tighter">{{ $user->phone ?? 'No phone' }}</span>
                             </div>
                         </td>
                         <td class="text-center">
@@ -41,9 +41,9 @@
                         <td class="text-center">
                             <div class="flex justify-center">
                                 @if($user->status === 'active')
-                                    <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-[10px] font-black uppercase tracking-widest border border-green-500/10">Actif</span>
+                                    <span class="px-3 py-1 rounded-full bg-green-500/10 text-green-600 text-[10px] font-black uppercase tracking-widest border border-green-500/10">Active</span>
                                 @else
-                                    <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-600 text-[10px] font-black uppercase tracking-widest border border-red-500/10">Inactif</span>
+                                    <span class="px-3 py-1 rounded-full bg-red-500/10 text-red-600 text-[10px] font-black uppercase tracking-widest border border-red-500/10">Inactive</span>
                                 @endif
                             </div>
                         </td>
@@ -56,11 +56,11 @@
                                         icon="{{ $user->status === 'active' ? 'lock-closed' : 'lock-open' }}"
                                         class="rounded-xl font-bold text-[11px] uppercase"
                                     >
-                                        {{ $user->status === 'active' ? 'Désactiver' : 'Réactiver' }}
+                                        {{ $user->status === 'active' ? 'Deactivate' : 'Reactivate' }}
                                     </flux:menu.item>
-                                    <flux:menu.item icon="pencil" class="rounded-xl font-bold text-[11px] uppercase">Détails Compte</flux:menu.item>
+                                    <flux:menu.item icon="pencil" class="rounded-xl font-bold text-[11px] uppercase">Account Details</flux:menu.item>
                                     <flux:menu.separator />
-                                    <flux:menu.item icon="trash" variant="danger" class="rounded-xl font-bold text-[11px] uppercase">Supprimer</flux:menu.item>
+                                    <flux:menu.item icon="trash" variant="danger" class="rounded-xl font-bold text-[11px] uppercase">Delete</flux:menu.item>
                                 </flux:menu>
                             </flux:dropdown>
                         </td>
@@ -70,7 +70,7 @@
                         <td colspan="5" class="py-20 text-center">
                             <div class="flex flex-col items-center justify-center">
                                 <i class="hgi-stroke hgi-user-group text-5xl text-zinc-200 dark:text-zinc-800 mb-4"></i>
-                                <p class="text-xs font-black text-zinc-400 uppercase tracking-widest">Aucun utilisateur trouvé</p>
+                                <p class="text-xs font-black text-zinc-400 uppercase tracking-widest">No user found</p>
                             </div>
                         </td>
                     </tr>

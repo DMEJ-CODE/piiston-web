@@ -12,10 +12,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const applyTheme = (theme) => {
     document.documentElement.setAttribute('data-theme', theme);
+    if (theme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
     localStorage.setItem('piiston_theme', theme);
-    if (themeToggleBtn) {
-      const sunIcon = themeToggleBtn.querySelector('.theme-icon-sun');
-      const moonIcon = themeToggleBtn.querySelector('.theme-icon-moon');
+    const btns = document.querySelectorAll('.theme-toggle-btn');
+    btns.forEach((btn) => {
+      const sunIcon = btn.querySelector('.theme-icon-sun');
+      const moonIcon = btn.querySelector('.theme-icon-moon');
       if (sunIcon && moonIcon) {
         if (theme === 'dark') {
           sunIcon.style.setProperty('display', 'inline-block', 'important');
@@ -25,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
           moonIcon.style.setProperty('display', 'inline-block', 'important');
         }
       }
-    }
+    });
   };
 
   if (storedTheme) {
@@ -36,13 +42,14 @@ document.addEventListener('DOMContentLoaded', () => {
     applyTheme('light');
   }
 
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('.theme-toggle-btn');
+    if (btn) {
+      const currentTheme = document.documentElement.getAttribute('data-theme') || (document.documentElement.classList.contains('dark') ? 'dark' : 'light');
       const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
       applyTheme(newTheme);
-    });
-  }
+    }
+  });
 
   // 2. Sticky Header Effect
   const header = document.querySelector('.lp-header');

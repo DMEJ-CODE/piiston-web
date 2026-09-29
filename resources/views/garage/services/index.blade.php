@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('Catalogue des Services')">
+<x-layouts::app :title="__('garage.Catalogue des Services')">
     <x-garage.index-header
         title="Catalogue des Services"
         subtitle="Prestations proposées par l'atelier - {{ $branch->name }}"
@@ -8,38 +8,60 @@
         searchPlaceholder="Rechercher une prestation..."
     />
 
+    @php
+        $stats = [
+            'total' => collect($services)->count(),
+            'avg_price' => collect($services)->avg('price'),
+        ];
+    @endphp
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 mb-6">
+        <x-dashboard.stat-card
+            title="Total Prestations"
+            :value="$stats['total']"
+            icon="tag-01"
+            color="var(--active-2)"
+        />
+        <x-dashboard.stat-card
+            title="Tarif Moyen"
+            :value="number_format($stats['avg_price'] ?? 0, 0, ',', ' ') . ' F'"
+            icon="money-01"
+            color="#10B981"
+        />
+    </div>
+
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <!-- Services List -->
         <div class="lg:col-span-8">
-            <div class="bg-[var(--surface)] p-2 rounded-2xl border border-zinc-100 dark:border-white/5 shadow-card-sm overflow-hidden">
+            <div class="card-premium !p-0">
                 <div class="overflow-x-auto">
-                    <table class="w-full text-left">
+                    <table class="piiston-table w-full text-left">
                         <thead>
-                            <tr class="text-left border-b border-zinc-50 dark:border-white/5 bg-zinc-50/50 dark:bg-white/[0.02]">
-                                <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Prestation</th>
-                                <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Durée</th>
-                                <th class="py-3 px-3 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Tarif (F)</th>
-                                <th class="py-3 px-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-right">Actions</th>
+                            <tr>
+                                <th>Prestation</th>
+                                <th class="text-center">Durée</th>
+                                <th class="text-right">Tarif (F)</th>
+                                <th class="text-right">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-zinc-50 dark:divide-white/[0.02]">
+                        <tbody>
                             @forelse($services ?? [] as $service)
-                                <tr class="group hover:bg-zinc-50 dark:hover:bg-white/[0.01] transition-all cursor-pointer">
-                                    <td class="py-2.5 px-4">
-                                        <div class="flex items-center gap-2">
-                                            <div class="size-7 rounded-lg bg-blue-500/10 text-blue-600 flex items-center justify-center">
-                                                <flux:icon icon="tag" variant="outline" class="size-3.5" />
+                                <tr class="cursor-pointer">
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <div class="piiston-icon-avatar text-blue-500" style="--active-rgb: 59, 130, 246; --active-2-rgb: 37, 99, 235; color: #3b82f6;">
+                                                <flux:icon icon="tag" variant="outline" class="size-4" />
                                             </div>
                                             <span class="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-tight">{{ $service->name }}</span>
                                         </div>
                                     </td>
-                                    <td class="py-2.5 px-3 text-center">
+                                    <td class="text-center">
                                         <span class="text-[10px] font-bold text-zinc-500 uppercase">{{ $service->duration_minutes }}m</span>
                                     </td>
-                                    <td class="py-2.5 px-3 text-right">
+                                    <td class="text-right">
                                         <span class="text-[11px] font-black text-zinc-900 dark:text-white">{{ number_format($service->price, 0, ',', ' ') }}</span>
                                     </td>
-                                    <td class="py-2.5 px-4 text-right">
+                                    <td class="text-right">
                                         <flux:dropdown>
                                             <flux:button size="xs" variant="ghost" icon="ellipsis-vertical" class="rounded-lg" />
                                             <flux:menu class="min-w-[150px] rounded-xl p-1 shadow-xl">
@@ -50,9 +72,17 @@
                                     </td>
                                 </tr>
                             @empty
-                                <tr>
-                                    <td colspan="4" class="py-12 text-center text-zinc-400">
-                                        <p class="text-[10px] font-black uppercase">Catalogue vide</p>
+                                <tr class="empty-state">
+                                    <td colspan="4" class="py-24 text-center">
+                                        <div class="flex flex-col items-center justify-center gap-4">
+                                            <div class="size-16 rounded-full bg-slate-50 dark:bg-white/5 flex items-center justify-center border border-slate-100 dark:border-white/10">
+                                                <flux:icon icon="tag" class="size-8 text-slate-300 dark:text-slate-600" />
+                                            </div>
+                                            <div class="flex flex-col gap-1">
+                                                <p class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Catalogue Vide</p>
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase">Ajoutez vos prestations depuis le formulaire.</p>
+                                            </div>
+                                        </div>
                                     </td>
                                 </tr>
                             @endforelse
@@ -64,7 +94,7 @@
 
         <!-- Add Service Card -->
         <div class="lg:col-span-4">
-            <flux:card class="p-6 rounded-[16px] border-none shadow-xl">
+            <div class="card-premium p-6">
                 <h3 class="text-[11px] font-black uppercase tracking-widest mb-6">Ajouter une prestation</h3>
                 <form method="POST" action="{{ route('garage.services.store') }}" class="space-y-4">
                     @csrf
@@ -83,12 +113,12 @@
                         </flux:field>
                     </div>
                     <div class="pt-2">
-                        <flux:button type="submit" variant="primary" class="w-full h-9 bg-gradient-to-br from-[var(--active-2)] to-[var(--active)] text-white border-none font-black uppercase tracking-widest text-[9px] rounded-lg">
+                        <button type="submit" class="btn-premium-primary w-full h-10">
                             Enregistrer
-                        </flux:button>
+                        </button>
                     </div>
                 </form>
-            </flux:card>
+            </div>
         </div>
     </div>
 </x-layouts::app>

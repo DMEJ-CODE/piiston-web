@@ -1,0 +1,989 @@
+@startuml
+' ============================================================================
+' Piiston - Package Diagram
+' Mobile app (Flutter/Dart)  +  Backend (Laravel 13/PHP)  +  Web (Livewire/Blade)
+' ============================================================================
+
+title Piiston — Package Diagram
+
+package "<<device>>\nMOBILE APP\npiisston_v1 (Flutter 3.9 / Dart SDK ^3.9.2)" as Mobile {
+
+  package "lib (root)" as MobRoot {
+    class main.dart
+    class welcome.dart
+    class loading.dart
+    class home.dart
+    class dashboard_bar <<core files>>
+  }
+
+  package "auth" as MobAuth {
+    class login
+    class register
+    class phone_verification
+    class role_selection
+    class verify_email "dead stub"
+    class forget_password
+  }
+
+  package "routing" as MobRouting {
+    class app_routes <<PiistonRoutes>>
+    class routes <<appRoutes Map>>
+    class navigation_service <<static>>
+    class AppRouteObserver
+  }
+
+  package "models (immutable DTOs)" as MobModels {
+    class user_role "enum UserRole"
+    class chat_models "ChatConversation, ChatMessage, ChatMessageType"
+    class market_models "MarketItem, Cart, MarketCategory, ServiceType"
+    class garage_category
+    class menu_data
+    class notification_model "PiistonNotificationType"
+    class search_model "SearchCategory"
+    class seller_models "SellerOrder, Supplier, PurchaseOrder, B2BRequest, PartQuote, SellerDashboardStats"
+  }
+
+  package "services (46 files)" as MobSvc {
+
+    package "core" as SvcCore {
+      class ApiService "static baseUrl/isOffline"
+      class OfflineCacheService "piiston_cache_ prefix"
+      class BiometricService "local_auth"
+      class MediaService "image_picker"
+      class VoiceService "speech_to_text, singleton"
+      class ThemeService "singleton, theme_mode"
+      class LocalizationService "singleton, en/fr, 'language_code'"
+      class language_sync "2-way profile sync"
+      class translations "data: translations map"
+    }
+
+    package "identity" as SvcId {
+      class AuthService "auth_token lifecycle"
+      class ActivityService
+      class AddressService
+    }
+
+    package "vehicle" as SvcVeh {
+      class VehicleService
+      class VehicleCatalogService
+      class MaintenanceService
+      class ReminderService
+      class WarrantyService
+    }
+
+    package "repair-workflow" as SvcWf {
+      class WorkflowService "repairs/*"
+      class AppointmentService "appointments/*"
+      class GarageService "garages/*"
+      class MechanicService "mechanic/*"
+      class EmergencyService "emergency-requests/*"
+      class MapService "maps/*"
+      class ReviewService
+    }
+
+    package "marketplace" as SvcMkt {
+      class MarketplaceService "marketplace/*, social/*"
+      class SellerService "seller/*"
+      class SubscriptionService
+      class PromotionService
+    }
+
+    package "finance" as SvcFin {
+      class PaymentService "payments/pay, verify"
+      class FinanceService "finance/*"
+    }
+
+    package "comms" as SvcComms {
+      class MessagingService "singleton, Pusher"
+      class CallService "singleton, 3 ValueNotifiers"
+      class NotificationService "singleton"
+      class PushNotificationService "singleton, FCM"
+      class notification_handler "tap router via navigatorKey"
+    }
+
+    package "ai" as SvcAi {
+      class AiService "ai/*, throws on failure"
+      class AiSuggestionService "bypasses ApiService"
+    }
+
+    package "platform-extras" as SvcExtra {
+      class BiService
+      class DocumentService
+      class FleetService
+      class AdminService
+      class IntegrationService
+      class SearchService
+      class ExpenseService
+      class GlobalizationService
+    }
+  }
+
+  package "pages" as MobPages {
+    package "workflow" as PgWf {
+      class service_request_wizard
+      class booking_flow
+      class repair_tracking
+      class quote_comparison
+      class sos_live
+      class sos_intervention_form
+      class mechanic_emergency_hub
+      class emergency_assistance "5s poll + geolocator"
+      class vin_scan_page
+      class part_request_creation
+      class incident_report
+      class garage_explore "5s SOS timer + geo"
+      class garage_profile
+      class garage_review
+    }
+    package "dashboard" as PgDash {
+      class dashboard "role switch"
+      class owner_dashboard
+      class mechanic_dashboard "10s SOS poll"
+      class seller_dashboard
+      class mechanic_invitations "unreachable route"
+      class dashboard_widgets "6 shared widgets"
+    }
+    package "seller" as PgSeller {
+      class add_product_page
+      class edit_product_page
+      class b2b_quote_center
+      class b2b/quote_history
+      class analytics_page
+      class customers/customer_list
+      class finance/wallet_page
+      class logistics/delivery_page
+      class marketing/promotions_page
+      class catalog/product_details
+      class catalog/compatibility_manager
+      class onboarding_page
+      class orders/order_details
+      class support/returns_page
+      class support/reviews_page
+      class ai/seller_ai_tools
+      class seller_more_menu
+      class seller_settings
+      class suppliers_page
+    }
+    package "profile" as PgProf {
+      class personal_info
+      class addresses
+      class vehicles
+      class add_vehicle_advanced
+      class vehicle_passport
+      class maintenance_log
+      class expenses
+      class reminders
+      class warranties
+      class security
+      class wallet_page
+      class subscription_page
+      class favorites
+      class orders
+      class orders_seller
+      class appearance
+      class help_center
+      class about
+      class category_hub
+      class mechanic_profile_edit
+    }
+    package "market+comms" as PgMisc {
+      class marketplace
+      class product_detail_page
+      class cart_page
+      class checkout_page
+      class message
+      class chat_detail_page
+      class call_page
+      class incoming_call_page
+      class notification
+      class notification_detail_page
+      class research
+      class activity
+      class tasks
+      class inventory
+      class action
+      class profile
+      class ai/ai_assistant
+      class others/payment_gateway_page
+      class others/status_pages
+    }
+  }
+
+  package "perso_widget (design system)" as MobWidgets {
+    class PageTemplate
+    class NavBar "NavItemData"
+    class PiistonAppBar
+    class PiistonSearchBar
+    class PiistonTextField
+    class GlassCard / CardGlass
+    class PremiumCard
+    class ProductCard
+    class SkeletonLoader / lottie_states
+    class ExpenseChart
+    class OfferCarousel
+    class VideoFeedItem
+    class VoiceSearchOverlay
+    class SocialAuthButtons "stubs"
+    class AuthBackground
+    class NotificationSettingsSheet
+  }
+
+  package "theme" as MobTheme {
+    class app_colors
+    class app_text_styles
+    class app_borders
+    class app_animations
+    class buttona
+  }
+}
+
+package "<<device>>\nMOBILE PLATFORM ADAPTERS" as MobPlatform {
+  component "flutter_secure_storage\n(Keystore / Keychain)" as SecureStore
+  component "shared_preferences" as Prefs
+  component "firebase_messaging\n(FCM)" as FCM
+  component "flutter_local_notifications" as LocalNotif
+  component "geolocator + flutter_map\n+ latlong2" as Geo
+  component "local_auth\n(biometric)" as LocalAuth
+  component "speech_to_text" as STT
+  component "image_picker / file_picker" as Picker
+  component "cached_network_image" as CNI
+  component "http package" as HttpPkg
+  component "pusher_channels_flutter\n(useTLS: false)" as PusherPkg
+  component "lottie" as Lottie
+  component "hugeicons" as HugeIcons
+  component "google_nav_bar / persistent_bottom_nav_bar" as NavLibs
+}
+
+package "<<network>>\nWIRELESS / LAN" as Net {
+  component "HTTP :8000\n/api/*" as HTTPBus
+  component "Pusher MT1\n(realtime, plaintext)" as PusherBus
+  component "FCM\n(Google relay)" as FCMBus
+  component "OSM / tile server\n(flutter_map raster)" as TileBus
+}
+
+' ----------------------------------------------------------------------------
+
+package "<<server>>\nBACKEND\nLaravel 13 / PHP 8.4" as Backend {
+
+  package "bootstrap" as BeBoot {
+    class bootstrap/app.php "withRouting, middleware\naliases, shouldRenderJsonWhen(api/*)"
+    class FortifyServiceProvider
+    class AppServiceProvider
+    class AuthServiceProvider "30 policies, Gate::before ADMIN"
+  }
+
+  package "routes" as BeRoutes {
+    class web.php "~100 garage.* + landing\n+ requires settings.php, admin.php"
+    class api.php "328 routes, /api prefix\nNO /v1 prefix (removed)"
+    class admin.php "16 Livewire admin screens"
+    class settings.php "3 settings screens + passkey RP discovery"
+    class channels.php "2 private channels"
+    class console.php "inspire only — NO Schedule::"
+  }
+
+  package "Http/Middleware" as BeMw {
+    class RoleMiddleware "role:"
+    class PermissionMiddleware "permission: — REGISTERED, NEVER APPLIED"
+    class AdminMiddleware "admin"
+    class EnsureOnboardingIsComplete "onboarding"
+    class EnsureSubscriptionFeature "subscription.feature:"
+    class ResolveGarageBranch "injects request->garageBranch"
+    class LocaleMiddleware "session -> pref -> en"
+  }
+
+  package "Http/Controllers" as BeCtrl {
+
+    package "Api/v1 (mobile surface)" as CtrlV1 {
+      class AuthController "register/login/check-email\ncheck-phone/send-otp/verify-otp/user/logout"
+      class UserController
+      class VehicleController / VehicleMaintenanceController / VehicleDocumentController
+      class VehicleCatalogController
+      class OwnershipHistoryController
+      class AppointmentController
+      class RepairController / RepairWorkflowController
+      class EmergencyRequestController / SOSTrackingController
+      class IncidentController
+      class SearchController / RecommendationController
+      class ReviewController
+      class ExpenseController
+      class AddressController / ActivityController
+      class MaintenanceAlertController / WarrantyController / InsuranceController
+      class MechanicController
+      class GarageController
+      class Notification-ish::Notifications.NotificationController
+      class Notifications.DeviceController
+      class Notifications.PreferenceController
+      class Messaging.ConversationController / MessageController
+      class Social.FeedInteractionController
+    }
+
+    package "Api/v1 nested modules" as CtrlMod {
+      class Marketplace.ProductController / OrderController / CartController\n PartRequestController / PartQuoteController / StoreController
+      class Marketplace.Seller.* "Dashboard Product Order Supplier\n Purchase B2BQuote Analytics Delivery Finance\n Promotion Review AIAssistant Onboarding Customer"
+      class Garage.* "Dashboard Branch Employee Customer\n Appointment RepairPart PurchaseOrder WarrantyClaim\n GarageMarketplaceOrder"
+      class Finance.PaymentController / WalletController\n SubscriptionController / InvoiceController
+      class Fleet.FleetController / VehicleController\n DriverController / ExpenseController
+      class Admin.UserController / SettingsController / AIController
+    }
+
+    package "Api legacy (non-v1, duplicate surface)" as CtrlLegacy {
+      class AuthController "POST /register, /login"
+      class MarketplaceController "GET /marketplace/parts, categories, brands"
+      class ConversationController / MessageController "/messaging/*"
+      class PresenceController
+      class AI.AssistantController / DiagnosisController "/ai/*"
+      class Search.SearchController / RecommendationController\n / UserActionController
+      class Maps.* "Location Routing Tracking Geofence"
+      class BI.DashboardController / ReportController
+      class Documents.DocumentController / ActionController "/dms/*"
+      class Admin.* "User System Verification\n CMS Analytics  (see Security note)"
+      class WorkflowController
+      class PaymentController "GET /finance/payment-methods, transactions"
+      class WalletController / InvoiceController
+      class Gallery-or-not::FleetController / DriverController / VehicleController
+      class GarageCompanyController / WorkshopController
+      class DeviceController
+      class SystemAgentController "/system-agent/*"
+    }
+
+    package "Web (garage back-office)" as CtrlWeb {
+      class RepairController / DiagnosisController / EstimateController
+      class CheckInController / DeliveryController
+      class GarageController / BranchController / GarageEmployeeController
+      class WorkshopBayController / GarageServiceController / GarageSettingsController
+      class GaragePurchaseOrderController / GarageWarrantyClaimController
+      class GarageInvoiceController / GaragePaymentController
+      class GarageEmergencyController
+      class SearchController
+      class SubscriptionController
+      class LandingController / PublicEstimateController
+    }
+  }
+
+  package "Http/Resources + Requests" as BeRes {
+    class "Eloquent Resources\n(Vehicles, Garages, Mechanics, Finance,\n Identity, Marketplace, Messaging,\n Notifications, Workflows, Admin)" as Resources
+    class "FormRequests\n(Admin, Auth, Finance, Fleets, Garages,\n Marketplace, Mechanics, Notifications,\n Vehicles, Workflows)" as Requests
+  }
+
+  package "Services (domain layer)" as BeSvc {
+    package "Identity" as SId { class UserService
+    class AuthService
+    class ActivityService }
+    package "Workflows" as SWf { class RepairService "REPAIR MACHINE WRITER" }
+    package "Garages" as SGar {
+      class ReceptionService
+    class WarrantyService
+    class AppointmentService
+      class PurchaseOrderService
+    class CustomerService
+    class EmployeeService
+      class GarageService
+    class InventoryService
+    class SubscriptionService
+      class AuditService
+    class ReportService
+    class NotificationService
+    }
+    package "Marketplace" as SMkt {
+      class OrderService
+    class CartService
+    class QuoteService
+      class InventoryService
+    class MarketplaceService
+    }
+    package "Mechanics" as SMec { class MechanicService }
+    package "Finance" as SFin {
+      class PaymentService "STATUS NORMALIZER + webhook"
+      class WalletService
+    class SubscriptionService
+    class InvoiceService
+      class PaymentProviderInterface
+    }
+    package "Messaging" as SMsg { class ChatEngine }
+    package "Notifications" as SNot {
+      class NotificationService
+    class TemplateService
+    }
+    package "AI" as SAi {
+      class AIService "adapter dispatch + fallback"
+      class DiagnosisService
+    class PromptEngine
+    }
+    package "Administration" as SAdm { class AdminService
+    class PlatformSettingsService }
+    package "BI" as SBI { class AnalyticsService
+    class DashboardWidgetEngine
+    class KPIService
+    class MetricsRegistry }
+    package "Documents" as SDoc { class DocumentService
+    class DLMManager
+    class MetadataEngine
+    class StorageService }
+    package "Search" as SSrch { class SearchService
+    class IndexingService }
+    package "Maps" as SMap { class MapProviderService "Haversine in PHP" }
+    package "SystemAgent" as SAg { class SystemAgentService }
+    class PaymentGatewayService
+    class Payments.NotchPayClient
+  }
+
+  package "Repositories (Interface + Eloquent)" as BeRepo {
+    class "Administration (Admin, Settings)" as RA
+    class "Finance (Invoice, Payment, Subscription, Wallet)" as RF
+    class "Fleets (Fleet)" as RFl
+    class "Garages (Garage)" as RG
+    class "Identity (User, Role)" as RI
+    class "Marketplace (Order, Product, Store)" as RM
+    class "Mechanics (Mechanic)" as RMe
+    class "Messaging (Conversation, Message)" as RMs
+    class "Notifications (Device, Notification)" as RN
+    class "Vehicles (Vehicle)" as RV
+    class "Workflows (Repair)" as RW
+  }
+
+  package "Models (≈300 Eloquent models)" as BeModels {
+    package "Identity" as MId { class User "root aggregate"
+    class Role
+    class Permission
+    class Device
+    class UserAddress
+    class UserPreference
+    class UserActivity }
+    package "Vehicles" as MVeh { class Vehicle
+    class VehicleBrand
+    class VehicleModel
+    class VehicleGeneration
+    class VehicleMaintenance
+    class VehicleDocument
+    class VehicleHealth
+    class VehicleOwnership
+    class VehicleHistory
+    class FuelType
+    class Transmission }
+    package "Garages" as MGa {
+      class GarageCompany
+    class GarageBranch
+    class GarageEmployee
+      class RepairOrder "CENTRAL ENTITY"
+    class RepairEstimate
+    class RepairTask
+      class VehicleDiagnosis
+    class VehicleCheckIn
+    class VehicleDelivery
+      class QualityCheck
+    class WarrantyClaim
+    class GarageAppointment
+      class GarageCustomer
+    class GarageService
+    class WorkshopBay
+    class GarageInventory
+      class RepairPart
+    class RepairPartUsage
+    class GarageInvoice
+    class GaragePayment
+      class GarageReview
+    class GarageSupplier
+    class GarageSubscription
+    class GarageMedia
+    }
+    package "Marketplace" as MMa {
+      class ProductListing
+    class Order
+    class OrderItem
+    class Delivery
+      class ShoppingCart
+    class CartItem
+    class SparePart
+    class PartCategory
+    class PartBrand
+      class PartRequest
+    class PartQuote
+    class SellerProfile
+    class SellerInventory
+      class Supplier
+    class PurchaseOrder
+    class PurchaseOrderItem
+    class StockMovement
+      class PartVehicleCompatibility
+    class SellerReview
+    }
+    package "Mechanics" as MMe { class MechanicProfile
+    class MechanicSkill
+    class MechanicCertification
+    class MechanicEmployment
+    class MechanicAvailability
+    class MechanicAssignment
+    class MechanicReview
+    class MechanicEmergencyService
+    class MechanicPayment
+    class MechanicPerformance
+    class MechanicTool
+    class MechanicLocation
+    class MechanicServiceArea
+    class MechanicType }
+    package "Finance" as MFin { class PaymentTransaction
+    class Wallet
+    class WalletTransaction
+    class SubscriptionPlan
+    class UserSubscription
+    class Invoice
+    class InvoiceItem
+    class Refund
+    class WithdrawalRequest
+    class PaymentGateway
+    class PaymentMethod
+    class Currency
+    class PlatformCommission
+    class DiscountCoupon
+    class TaxRate }
+    package "Workflows" as MWf { class ServiceRequest
+    class EmergencyRequest
+    class RepairApproval
+    class RepairProgress
+    class RepairWarranty
+    class LaborRecord
+    class DiagnosticMeasurement
+    class VehicleFaultCode }
+    package "Messaging" as MMs { class Conversation
+    class ConversationMember
+    class Message
+    class MessageMedia
+    class MessageStatus
+    class MessageReaction
+    class VoiceMessage
+    class SharedLocation
+    class UserPresence
+    class ChatContext
+    class ChatGroup }
+    package "Notifications" as MNt { class Notification
+    class NotificationType
+    class NotificationPreference
+    class NotificationTemplate
+    class UserDevice
+    class PushLog
+    class Alert
+    class MaintenanceAlert
+    class SystemAnnouncement
+    class SystemEvent }
+    package "AI" as MAi { class AiAssistant
+    class AiConversation
+    class AiMessage
+    class AiDiagnosis
+    class AiProvider
+    class AiModel
+    class AiPromptTemplate
+    class AiUsageLog
+    class AiMemory
+    class AiContext
+    class AiPartRecommendation
+    class AiRepairSuggestion
+    class AiMaintenancePrediction
+    class AiFleetInsight
+    class AiGarageRecommendation }
+    package "Globalization" as MGl { class Country
+    class Region
+    class City
+    class Currency
+    class Language
+    class Timezone
+    class Address
+    class PhoneCountryCode
+    class TaxConfiguration
+    class CountryConfiguration
+    class PaymentProvider
+    class DocumentType }
+    package "Maps" as MMap { class Location
+    class GeoPoint
+    class TrackingSession
+    class NavigationSession
+    class Route
+    class RoutePoint
+    class Geofence
+    class GeofenceEvent
+    class TravelEstimate
+    class TrafficSnapshot
+    class ParkingLocation
+    class RoadsideAssistance
+    class NearbySearch
+    class DeliveryZone
+    class DeliveryCoverage
+    class MapProvider
+    class MapLayer
+    class LiveLocation
+    class LocationHistory
+    class LocationShare
+    class SearchIndexQueue }
+    package "Administration" as MAd { class Administrator
+    class AdminRole
+    class AdminPermission
+    class AdminAuditLog
+    class AdminBroadcast
+    class SystemSetting
+    class FeatureFlag
+    class FraudCase
+    class ModerationCase
+    class PlatformReport
+    class PlatformStatistic
+    class BusinessVerification
+    class DocumentVerification
+    class CMSPage
+    class FAQItem
+    class FAQCategory }
+    package "BI" as MBI { class Dashboard
+    class DashboardWidget
+    class Report
+    class ReportTemplate
+    class ReportFilter
+    class ReportExecution
+    class ReportShare
+    class ScheduledReport
+    class ExportJob
+    class KPI
+    class Metric
+    class PerformanceIndicator
+    class AnalyticsSnapshot
+    class BusinessInsight
+    class Forecast
+    class Benchmark
+    class AlertRule
+    class AuditMetric
+    class DataSource
+    class Chart }
+    package "Documents" as MDoc { class Document
+    class DocumentType
+    class DocumentCategory
+    class DocumentVersion
+    class DocumentApproval
+    class DocumentTemplate
+    class DocumentFolder
+    class DocumentHistory
+    class DocumentExpiration
+    class MediaFile
+    class OCRResult }
+    package "Fleets" as MFl { class Fleet
+    class FleetVehicle
+    class FleetMember
+    class Driver
+    class DriverAssignment
+    class Company
+    class Accident
+    class Insurance
+    class MaintenancePlan
+    class MaintenanceSchedule
+    class FleetMaintenance
+    class FleetRepair
+    class FleetExpense
+    class FleetAlert
+    class FleetFuelRecord
+    class FleetReport
+    class GPSData
+    class FuelRecord
+    class UsageLog }
+    package "Search" as MSr { class SearchIndex
+    class SearchDocument
+    class SearchKeyword
+    class SearchCategory
+    class SearchFilter
+    class SearchSession
+    class SearchHistory
+    class SearchRanking
+    class SearchSynonym
+    class SearchAnalytics
+    class SearchResultClick
+    class TrendingItem
+    class Favorite
+    class SavedSearch
+    class Recommendation
+    class RecommendationRule
+    class AutocompleteSuggestion
+    class GeoSearchArea
+    class SearchIndexQueue }
+    package "Promotions" as MPr { class Promotion
+    class PromotionType
+    class Campaign
+    class CampaignTarget
+    class Coupon
+    class DiscountRule
+    class Audience
+    class AudienceRule
+    class AdCreative
+    class AdPlacement
+    class Advertisement
+    class SponsoredListing
+    class PromotionBudget
+    class PromotionAnalytics
+    class PromotionLead }
+    package "Integrations" as MIn { class Integration
+    class IntegrationProvider
+    class IntegrationCredential
+    class ExternalService
+    class ExternalSync
+    class ExternalMapping
+    class SyncQueue
+    class Webhook
+    class WebhookEvent
+    class WebhookDelivery
+    class ApiClient
+    class ApiKey
+    class ApiPermission
+    class ApiRequest
+    class ApiResponse
+    class ApiVersion
+    class DeveloperApplication
+    class DeveloperSubscription }
+    package "Social" as MSo { class SocialInteraction }
+    package "root / misc" as MMisc { class Reminder
+    class ApplicationErrorLog
+    class ContactSubmission
+    class NewsletterSubscription }
+  }
+
+  package "Policies" as BePol {
+    class FleetPolicy
+    class GaragePolicy
+    class MarketplacePolicy
+    class MechanicPolicy
+    class NotificationPolicy
+    class RepairOrderPolicy
+    class VehiclePolicy
+  }
+
+  package "AI adapters" as BeAi {
+    interface AIProviderInterface
+    class GeminiAdapter
+    class OpenAIAdapter
+    class OpenRouterAdapter
+  }
+
+  package "Search providers" as BeSp {
+    interface SearchProviderInterface
+    class LocalSearchProvider "hardcoded in SearchService"
+  }
+
+  package "Events (ShouldBroadcast)" as BeEv {
+    class Messaging.MessageSent
+    class Messaging.UserTyping
+    class Messaging.CallStarted
+    class Notifications.NotificationSent
+  }
+
+  package "Jobs / Notifications / Mail / Console" as BeJob {
+    class Notifications.SendPushNotificationJob "FCM POST is COMMENTED OUT"
+    class Notifications.SendEmailNotificationJob
+    class Notifications.SendSmsNotificationJob "no provider configured"
+    class BI.AggregatePlatformMetricsJob
+    class SystemAgent.ProcessReminderJob
+    class ReminderNotification
+    class ContactSubmissionMail
+    class NewsletterSubscriptionMail
+    class RunSystemAgent "system-agent:run — NEVER SCHEDULED"
+  }
+
+  package "Livewire (web reactive components)" as BeLw {
+    package "Garage / Identity" as LwGar { class "Setup, RepairChat" as LwSetup
+    class "RegisterFlow, Onboarding" as LwAuth
+    class "ChatCenter" as LwChat }
+    package "Settings" as LwSet { class Profile
+    class Appearance
+    class Security
+    class DeleteUserForm
+    class TwoFactor.RecoveryCodes
+    class LanguageSwitcher }
+    package "Admin (16 screens)" as LwAdm { class Dashboard
+    class UserManagement
+    class AdministratorsManagement
+    class AdminRoles
+    class Permissions
+    class SystemSettings
+    class AuditLogs
+    class ApplicationErrors
+    class CMSPages
+    class PlatformReports
+    class ModerationCases
+    class FraudCases
+    class FeatureFlags
+    class GarageSubscriptions
+    class ChatCenter
+    class Actions.Logout }
+    package "SystemAgent" as LwSa { class RemindersPanel }
+  }
+
+  package "config" as BeCfg {
+    class app
+    class auth
+    class database
+    class cache
+    class queue
+    class filesystems
+    class broadcasting
+    class reverb
+    class fortify
+    class sanctum
+    class session
+    class logging
+    class mail
+    class services
+  }
+
+  package "database" as BeDb {
+    class migrations "≈300 migrations, 6 numbered waves"
+    class seeders "IdentitySeeder, AdministrationSystemSeeder,\n GaragePermissionsSeeder (65 garage.* perms)"
+    class factories
+  }
+
+  package "resources (frontend web)" as BeRes2 {
+    package "views/layouts" as VLay { class app/*
+    class auth/* }
+    package "views/livewire" as VLw { class auth/*
+    class settings/*
+    class garage/*
+    class admin/*
+    class messaging/*
+    class system-agent/* }
+    package "views/garage (30 subdirs)" as VG {
+      class "appointments, customers, repairs, inventory,\n employees, purchase-orders, warranty-claims,\n reports, check-ins, diagnoses, estimates,\n settings, search, notifications, documents,\n deliveries, support, emergencies, services,\n bays, invoices, payments, branches,\n marketplace, branches" as VGarage
+    }
+    package "views/components" as VComp { class layouts/*
+    class dashboard/*
+    class garage/*
+    class admin/*
+    class messaging/*
+    class settings/*
+    class partials/* }
+    package "views/flux" as VFlux { class "icon/*, navlist/* — Flux UI overrides" as VFlux2 }
+    package "views/public" as VPub { class "landing, pricing, legal, estimates/*" as VPub2 }
+    class resources/css "app.css, bootstrap assets"
+    class resources/js "app.js, Echo + Reverb bootstrap"
+  }
+}
+
+package "<<infra>>\nSTATEFUL INFRASTRUCTURE" as Infra {
+  database "MySQL / MariaDB / PostgreSQL\n(DB_CONNECTION, default sqlite)" as DB
+  database "Cache store\n(database | redis | memcached | file)" as Cache
+  database "Queue\n(database | redis | sqs | beanstalkd)" as Queue
+  database "Object storage\nlocal | s3 / MinIO / R2 / DO Spaces" as S3
+  database "Redis\n(cache db1, queue, REVERB_SCALING)" as Redis
+}
+
+package "<<infra>>\nEXTERNAL / SAAS" as External {
+  cloud "Gemini\ngenerativelanguage.googleapis.com\nGEMINI_API_KEY" as Gemini
+  cloud "OpenAI\nOPENAI_API_KEY\n(config/services.php has NO openai key)" as OpenAI
+  cloud "OpenRouter\nopenrouter.ai/api/v1\nOPENROUTER_API_KEY" as OpenRouter
+  cloud "NotchPay\napi.notchpay.co\nNOTCHPAY_API_KEY" as NotchPay
+  cloud "Laravel Reverb\nREVERB_HOST:443" as Reverb
+  cloud "Firebase Cloud Messaging\nFIREBASE_PROJECT_ID (job disabled)" as FCMS
+  cloud "Mail transport\nSMTP | SES | Postmark | Resend | log" as Mailer
+  cloud "Papertrail / Slack (logging)" as Logs
+  component "Maps tiles (flutter_map raster)" as Tiles
+  component "OSM tile server" as OSM
+}
+
+' ============================ DEPENDENCIES =================================
+
+' mobile internal
+MobRoot ..> MobRouting : "navigatorKey,\ninitialRoute, initialTargetRoute"
+MobAuth ..> MobSvc : "AuthService.sendOtp /\nverifyOtp / register / login"
+MobRoot ..> MobSvc : "ThemeService, LocalizationService,\nPushNotificationService"
+MobRoot ..> MobModels : "UserRole.fromJsonList"
+MobRoot ..> MobPages : "DashboardPage"
+
+MobPages ..> MobSvc : "one service per domain\n(each page owns its instances)"
+MobPages ..> MobModels : "DTO mapping"
+MobPages ..> MobWidgets : "composition"
+MobWidgets ..> MobTheme : "AppColors, AppTextStyles"
+MobPages ..> MobTheme : "direct colour use\n(SellerDashboard hardcodes\n'Ventes'/'Revenus'/'Alertes')"
+
+MobSvc ..> MobModels : "DTO construction"
+SvcCore ..> SvcId : "ApiService.getToken()\nreads auth_token"
+SvcId ..> SvcCore : "AuthService -> ApiService"
+SvcComms ..> SvcId : "MessagingService._getCurrentUserId()\n(one extra GET per message)"
+SvcAi ..> SvcCore : "none — the ONLY service\nthat rethrows instead of\nreturning a fallback value"
+SvcCore ..> MobPlatform : "FlutterSecureStorage,\nSharedPreferences, http"
+SvcComms ..> MobPlatform : "pusher_channels_flutter"
+MobPlatform ..> MobPlatform : "Firebase -> local notifications\n-> NotificationHandler -> navigatorKey"
+
+class "PushNotificationService" as Push1
+class "NotificationHandler" as NH1
+Push1 ..> NH1 : "onMessageOpenedApp /\ngetInitialMessage"
+NH1 ..> MobRouting : "navigatorKey.pushNamed(...)"
+
+' mobile -> network
+SvcCore ..> Net : "HTTP GET/POST/PUT/PATCH/DELETE\n+ multipart, 7s/10s/30s/45s(ai/)"
+SvcComms ..> Net : "Pusher MT1\nprivate-conversation.{id}"
+Push1 ..> Net : "FCM"
+MobPlatform ..> Net : "OSM tiles"
+
+' backend internal
+BeBoot ..> BeRoutes
+BeBoot ..> BeMw
+BeRoutes ..> BeCtrl
+BeCtrl ..> BeMw : "role: admin:\nonboarding: subscription.feature:"
+BeCtrl ..> BePol
+BeCtrl ..> BeRes
+BeCtrl ..> BeSvc
+BeCtrl ..> BeModels
+BeSvc ..> BeRepo
+BeRepo ..> BeModels
+BeSvc ..> BeModels : "direct Eloquent (dominant style)"
+BeSvc ..> BeAi : "AIService::getAdapter()"
+BeSvc ..> BeSp : "SearchService::getProvider()"
+BeSvc ..> BeEv : "dispatch (NEW_SOS_ALERT,\nREPAIR_COMPLETED, ...)"
+BeSvc ..> BeJob
+BeAi ..> BeAi : "GeminiAdapter / OpenAIAdapter /\n OpenRouterAdapter implement\n AIProviderInterface"
+BePol ..> BeBoot : "AuthServiceProvider::\$policies\n+ Gate::before(ADMIN => all)"
+BeEv ..> BeRoutes : "channels.php authorization"
+BeLw ..> BeSvc
+BeLw ..> BeModels
+BeRes2 ..> BeCfg : "config()/env()"
+BeDb ..> BeModels : "migrations + seeders"
+
+' backend -> infra
+BeSvc ..> Infra
+BeRes2 ..> Infra
+BeJob ..> Queue
+BeJob ..> S3
+BeEv ..> Reverb : "ShouldBroadcast"
+BeBoot ..> S3 : "storage:link -> public/storage"
+
+' backend -> external
+BeAi ..> External : "HTTPS"
+BeSvc ..> External : "NotchPayClient,\nMail, Reverb, FCM"
+BeJob ..> External : "FCM (disabled), mail, SMS"
+
+' web frontend
+BeLw ..> BeRes2 : "renders views/livewire/*"
+BeRes2 ..> BeCtrl : "web.php controllers render\nviews/garage/*"
+VFlux2 ..> BeRes2 : "Flux UI component overrides"
+
+' ============================ CROSS-CUTTING ================================
+
+note top of Mobile
+  <b>MOBILE ENTRY</b>  /loading -> /welcome | /home
+  <b>HOST</b> ApiService.baseUrl
+    = http://192.168.251.219:8000/api
+    = http://10.0.2.2:8000/api     (emulator, _isEmulator=false)
+    = http://127.0.0.1:8000/api    (desktop/iOS sim)
+  <b>AUTH</b> Bearer auth_token (FlutterSecureStorage)
+  <b>NO</b> refresh token, no interceptor, no client throttling
+end note
+
+note top of Backend
+  <b>API PREFIX</b> /api  — the /v1 segment was REMOVED
+  (routes/api.php:120 "// API v1 - PREFIX REMOVED");
+  the v1 survives only as a PHP namespace.
+  <b>API MIDDLEWARE</b> SubstituteBindings ONLY
+  (statefulApi() and throttleApi() are absent
+   from bootstrap/app.php) -> 328 unthrottled routes.
+end note
+
+note bottom of BeCtrlLegacy
+  <b>DUPLICATION / DEBT ZONES</b>
+  1. /messaging/* (legacy) vs /conversations* (v1)
+  2. /search (legacy) vs /search/global (v1)
+  3. /finance/transactions (legacy) vs /payments, /wallet/history (v1)
+  4. /marketplace/parts (legacy) vs /marketplace/products (v1)
+  5. Api\Admin\* mounted at /internal-admin/* with
+     auth:sanctum ONLY — no 'admin' middleware
+</note>
+
+@enduml

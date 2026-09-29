@@ -1,14 +1,14 @@
-<x-layouts::app :title="__('Tableau de bord Garage')">
+<x-layouts::app :title="__('garage.Garage Dashboard')">
     <div class="flex flex-col gap-4 pb-6">
         <!-- Header Section -->
         <div class="flex items-center justify-between">
             <div class="flex flex-col gap-1">
-                <h2 class="text-lg font-black uppercase text-zinc-900 dark:text-white tracking-tight">Vue d'ensemble</h2>
-                <p class="text-[10px] text-zinc-500 font-bold uppercase tracking-widest">{{ $branch->name }}</p>
+                <h2 class="text-base font-black uppercase text-slate-900 dark:text-white tracking-tight">Overview</h2>
+                <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase tracking-widest">{{ $branch->name }}</p>
             </div>
             <div class="flex gap-2">
                 <flux:button href="{{ route('garage.repairs.create') }}" size="xs" class="btn-premium-primary">
-                    <i class="hgi-stroke hgi-plus mr-2"></i> Nouveau RO
+                    <i class="hgi-stroke hgi-plus mr-2"></i> New RO
                 </flux:button>
             </div>
         </div>
@@ -16,7 +16,7 @@
         <!-- Top Stats Row -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <x-dashboard.stat-card
-                title="Réparations"
+                title="Repairs"
                 :value="$stats['repairs_this_month'] ?? 0"
                 icon="wrench-screwdriver"
                 trend="+8%"
@@ -24,7 +24,7 @@
                 color="var(--active-2)"
             />
             <x-dashboard.stat-card
-                title="Chiffre d'Affaires"
+                title="Revenue"
                 :value="number_format($stats['revenue_this_month'] ?? 0, 0, ',', ' ') . ' F'"
                 icon="banknotes"
                 trend="+12%"
@@ -32,7 +32,7 @@
                 color="#10B981"
             />
             <x-dashboard.stat-card
-                title="Rendez-vous"
+                title="Appointments"
                 :value="$stats['pending_appointments'] ?? 0"
                 icon="calendar-days"
                 trend="+4%"
@@ -40,7 +40,7 @@
                 color="#F59E0B"
             />
             <x-dashboard.stat-card
-                title="Urgences SOS"
+                title="SOS Emergencies"
                 :value="$stats['urgent_emergencies'] ?? 0"
                 icon="bolt"
                 trend="LIVE"
@@ -55,55 +55,55 @@
             <div class="col-span-12 lg:col-span-8 flex flex-col gap-4">
                 <!-- Monthly Revenue Chart -->
                 <x-dashboard.chart-card
-                    title="Performance Financière"
-                    subtitle="Évolution des revenus (14 jours)"
+                    title="Financial Performance"
+                    subtitle="Revenue trends (14 days)"
                     chartId="revenue-performance-chart"
                 />
 
                 <!-- Recent Activity -->
-                <div class="card-premium !p-4">
+                <div class="card-premium !p-5">
                     <div class="flex items-center justify-between mb-4 px-1">
                         <div class="flex flex-col gap-1">
-                            <h3 class="text-sm font-black text-zinc-900 dark:text-white uppercase tracking-widest">Activité Récente</h3>
-                            <p class="text-[10px] text-zinc-400 font-bold uppercase">Derniers ordres de réparation</p>
+                            <h3 class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-widest">Recent Activity</h3>
+                            <p class="text-[10px] text-slate-400 dark:text-slate-500 font-bold uppercase">Latest repair orders</p>
                         </div>
-                        <a href="{{ route('garage.repairs.index') }}" class="text-[10px] font-black uppercase text-[var(--active-2)] hover:underline">Voir l'historique</a>
+                        <a href="{{ route('garage.repairs.index') }}" class="text-[10px] font-black uppercase text-[var(--active-2)] hover:underline">View History</a>
                     </div>
 
                     <div class="overflow-x-auto">
                         <table class="w-full text-left">
                             <thead>
-                                <tr class="border-b border-zinc-50 dark:border-white/5">
-                                    <th class="pb-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Véhicule / RO</th>
-                                    <th class="pb-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest">Propriétaire</th>
-                                    <th class="pb-4 text-[10px] font-black text-zinc-400 uppercase tracking-widest text-center">Statut</th>
+                                <tr class="border-b border-slate-100 dark:border-slate-800/80">
+                                    <th class="pb-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Vehicle / RO</th>
+                                    <th class="pb-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">Owner</th>
+                                    <th class="pb-3 text-[10px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest text-center">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-zinc-50 dark:divide-white/[0.02]">
+                            <tbody class="divide-y divide-slate-100 dark:divide-slate-800/40">
                                 @forelse($recentRepairs as $repair)
-                                <tr class="group hover:bg-zinc-50 dark:hover:bg-white/[0.01] transition-colors cursor-pointer" onclick="window.location='{{ route('garage.repairs.show', $repair->id) }}'">
-                                    <td class="py-4">
+                                <tr class="group hover:bg-slate-50/80 dark:hover:bg-slate-800/30 transition-colors cursor-pointer" onclick="window.location='{{ route('garage.repairs.show', $repair->id) }}'">
+                                    <td class="py-3">
                                         <div class="flex items-center gap-3">
-                                            <div class="size-10 rounded-xl bg-[var(--active)]/10 text-[var(--active-2)] flex items-center justify-center border border-white/10 shadow-sm">
+                                            <div class="size-9 rounded-xl bg-[var(--active)]/10 text-[var(--active-2)] flex items-center justify-center border border-white/10 shadow-sm">
                                                 <flux:icon icon="truck" variant="outline" class="size-4" />
                                             </div>
                                             <div class="flex flex-col">
-                                                <span class="text-[11px] font-black text-zinc-900 dark:text-white uppercase tracking-tight">{{ $repair->vehicle->license_plate ?? 'N/A' }}</span>
-                                                <span class="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-0.5">RO #{{ $repair->id }}</span>
+                                                <span class="text-xs font-black text-slate-900 dark:text-white uppercase tracking-tight">{{ $repair->vehicle->license_plate ?? 'N/A' }}</span>
+                                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-0.5">RO #{{ $repair->id }}</span>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="py-4">
-                                        <span class="text-[11px] font-bold text-zinc-600 dark:text-zinc-400 uppercase tracking-tighter">{{ $repair->garageCustomer->user->name ?? '---' }}</span>
+                                    <td class="py-3">
+                                        <span class="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-tighter">{{ $repair->garageCustomer->user->name ?? '---' }}</span>
                                     </td>
-                                    <td class="py-4 text-center">
-                                        <span class="px-2.5 py-1 rounded-lg bg-zinc-100 dark:bg-white/5 text-[9px] font-black text-zinc-500 uppercase tracking-widest">{{ $repair->status }}</span>
+                                    <td class="py-3 text-center">
+                                        <span class="px-2.5 py-1 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200/50 dark:border-white/10 text-[9px] font-black text-slate-600 dark:text-slate-400 uppercase tracking-widest">{{ $repair->status }}</span>
                                     </td>
                                 </tr>
                                 @empty
                                 <tr>
                                     <td colspan="3" class="py-12 text-center">
-                                        <p class="text-xs font-black text-zinc-400 uppercase tracking-widest">Aucune réparation enregistrée</p>
+                                        <p class="text-xs font-black text-slate-400 dark:text-slate-500 uppercase tracking-widest">No repairs recorded</p>
                                     </td>
                                 </tr>
                                 @endforelse
@@ -117,7 +117,7 @@
             <div class="col-span-12 lg:col-span-4 flex flex-col gap-4">
                 <!-- Garage Efficiency Gauge -->
                 <x-dashboard.chart-card
-                    title="Occupation Atelier"
+                    title="Workshop Occupancy"
                     chartId="workshop-occupancy-gauge"
                 />
 
@@ -127,21 +127,21 @@
                 <!-- Subscription & Branch Stats -->
                 <div class="bg-zinc-900 dark:bg-zinc-800 p-4 rounded-2xl text-white flex flex-col gap-4 shadow-xl border border-white/5 relative overflow-hidden">
                     <div class="relative z-10">
-                        <h5 class="text-[9px] font-black uppercase tracking-[2px] text-white/40 text-center mb-4">Offre Professionnelle</h5>
+                        <h5 class="text-[9px] font-black uppercase tracking-[2px] text-white/40 text-center mb-4">Professional Plan</h5>
                         <div class="flex flex-col items-center gap-2">
-                            <div class="text-xl font-black tracking-tighter uppercase">{{ $subscription->plan->name ?? 'Pack Essai' }}</div>
-                            <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest border border-green-500/20">Abonnement Actif</span>
+                            <div class="text-xl font-black tracking-tighter uppercase">{{ $subscription->plan->name ?? 'Trial Pack' }}</div>
+                            <span class="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-[10px] font-black uppercase tracking-widest border border-green-500/20">Active Subscription</span>
                         </div>
 
                         <div class="h-px bg-white/10 my-4"></div>
 
                         <div class="grid grid-cols-2 gap-4">
                             <div class="flex flex-col gap-1">
-                                <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">En cours</span>
+                                <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Active</span>
                                 <span class="text-xl font-black tracking-tighter">{{ $stats['active_repairs'] ?? 0 }}</span>
                             </div>
                             <div class="flex flex-col gap-1 text-right">
-                                <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Rupture Stock</span>
+                                <span class="text-[10px] font-black text-white/30 uppercase tracking-widest">Low Stock</span>
                                 <span class="text-xl font-black tracking-tighter {{ ($stats['low_stock_items'] ?? 0) > 0 ? 'text-red-400' : '' }}">{{ $stats['low_stock_items'] ?? 0 }}</span>
                             </div>
                         </div>
@@ -152,15 +152,15 @@
 
                 <!-- Quick Access Links -->
                 <div class="flex flex-col gap-4">
-                    <h5 class="text-[11px] font-black text-zinc-400 uppercase tracking-[2px] px-3">Accès Rapide</h5>
+                    <h5 class="text-[11px] font-black text-zinc-400 uppercase tracking-[2px] px-3">Quick Access</h5>
                     <a href="{{ route('garage.inventory.index') }}" class="flex items-center justify-between p-3 rounded-xl bg-[var(--surface)] border border-zinc-100 dark:border-white/5 hover:border-[var(--active-2)]/30 hover:shadow-xl transition-all group">
                         <div class="flex items-center gap-4">
                             <div class="size-12 rounded-[18px] bg-blue-500/10 text-blue-500 flex items-center justify-center group-hover:scale-110 transition-transform shadow-sm">
                                 <flux:icon icon="archive-box" class="size-6" />
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-tight">Inventaire</span>
-                                <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Stock & Pièces</span>
+                                <span class="text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-tight">Inventory</span>
+                                <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Stock & Parts</span>
                             </div>
                         </div>
                         <i class="hgi-stroke hgi-chevron-right text-zinc-300 group-hover:text-[var(--active-2)] transition-all"></i>
@@ -172,8 +172,8 @@
                                 <flux:icon icon="user-group" class="size-6" />
                             </div>
                             <div class="flex flex-col">
-                                <span class="text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-tight">Équipe</span>
-                                <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Gestion Staff</span>
+                                <span class="text-xs font-black text-zinc-700 dark:text-zinc-300 uppercase tracking-tight">Staff</span>
+                                <span class="text-[10px] font-bold text-zinc-400 uppercase tracking-widest">Staff Management</span>
                             </div>
                         </div>
                         <i class="hgi-stroke hgi-chevron-right text-zinc-300 group-hover:text-purple-500 transition-all"></i>
@@ -203,12 +203,12 @@
 
             new ApexCharts(document.querySelector("#revenue-performance-chart"), {
                 chart: { type: 'area', height: 280, toolbar: { show: false }, fontFamily: 'Instrument Sans' },
-                series: [{ name: 'Revenu', data: revenueValues.length ? revenueValues : [120, 150, 140, 200, 180, 250, 220, 300, 280, 350, 320, 400] }],
+                series: [{ name: 'Revenue', data: revenueValues.length ? revenueValues : [120, 150, 140, 200, 180, 250, 220, 300, 280, 350, 320, 400] }],
                 colors: ['#315A7D'],
                 stroke: { curve: 'smooth', width: 3 },
                 fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.4, opacityTo: 0.05, stops: [20, 100] } },
                 xaxis: {
-                    categories: revenueDates.length ? revenueDates : ['J-11', 'J-10', 'J-9', 'J-8', 'J-7', 'J-6', 'J-5', 'J-4', 'J-3', 'J-2', 'J-1', 'Auj'],
+                    categories: revenueDates.length ? revenueDates : ['D-11', 'D-10', 'D-9', 'D-8', 'D-7', 'D-6', 'D-5', 'D-4', 'D-3', 'D-2', 'D-1', 'Today'],
                     axisBorder: { show: false },
                     axisTicks: { show: false },
                     labels: { style: { fontSize: '10px', fontWeight: 600, colors: '#94a3b8' } }

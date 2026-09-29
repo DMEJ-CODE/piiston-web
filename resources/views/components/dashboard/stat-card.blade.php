@@ -8,7 +8,7 @@
     'isNegative' => false
 ])
 
-<div class="card-premium !p-4 group cursor-default">
+<div class="card-premium !p-5 group cursor-default">
     <div class="flex items-center justify-between mb-3">
         <!-- Physical Icon Container -->
         <div class="size-9 rounded-xl flex items-center justify-center border border-white dark:border-slate-800 shadow-sm"

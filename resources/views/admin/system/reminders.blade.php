@@ -1,4 +1,4 @@
-<x-layouts::app :title="__('System Reminders')">
+<x-layouts::app :title="__('admin.System Reminders')">
     <div class="mx-auto max-w-7xl py-8">
         <div class="mb-6">
             <h1 class="text-2xl font-bold text-zinc-900">System Reminders</h1>

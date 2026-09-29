@@ -83,13 +83,13 @@ class GarageWebTest extends TestCase
     {
         $response = $this->actingAs($this->owner)->get('/garage/repairs');
         $response->assertStatus(200);
-        $response->assertSee('Réparations');
+        $response->assertSee('Repairs');
     }
 
     public function test_owner_can_access_garage_dashboard_page()
     {
         $response = $this->actingAs($this->owner)->get('/garage/dashboard');
         $response->assertStatus(200);
-        $response->assertSee('Tableau de bord');
+        $response->assertSee('Dashboard');
     }
 }
